@@ -1,0 +1,182 @@
+import { format } from 'date-fns';
+import { formatDuration, csatIndicator } from './metrics';
+
+export function computeHealthScore(metrics) {
+  if (!metrics.totalTickets) return null;
+
+  let score = 100;
+  score -= metrics.slaBreachRate * 0.45;
+  if (metrics.avgCsat != null) score -= (5 - metrics.avgCsat) * 10;
+  score -= Math.min(18, metrics.reopenings * 1.5);
+  score -= Math.min(12, metrics.p1p2Count * 1.2);
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+export function healthIndicator(score) {
+  if (score == null) return { label: 'No Data', level: 'neutral', color: '#94a3b8' };
+  if (score >= 80) return { label: 'Healthy', level: 'excellent', color: '#059669' };
+  if (score >= 65) return { label: 'Stable', level: 'good', color: '#10b981' };
+  if (score >= 50) return { label: 'Watch', level: 'fair', color: '#f59e0b' };
+  return { label: 'At Risk', level: 'poor', color: '#ef4444' };
+}
+
+export function getAtRiskAccounts(accountMetrics) {
+  return accountMetrics
+    .map((account) => ({
+      ...account,
+      healthScore: computeHealthScore(account.metrics),
+    }))
+    .filter((account) => {
+      const { metrics, healthScore } = account;
+      return (
+        healthScore < 60
+        || metrics.slaBreachRate > 18
+        || (metrics.avgCsat != null && metrics.avgCsat < 3.5)
+        || metrics.p1Count > 0
+      );
+    })
+    .sort((a, b) => a.healthScore - b.healthScore);
+}
+
+export function enrichAccountMetrics(accountMetrics) {
+  return accountMetrics.map((account) => {
+    const healthScore = computeHealthScore(account.metrics);
+    return {
+      ...account,
+      healthScore,
+      health: healthIndicator(healthScore),
+    };
+  });
+}
+
+export function computeDelta(current, previous, lowerIsBetter = false) {
+  if (previous == null || current == null || Number.isNaN(previous) || Number.isNaN(current)) {
+    return null;
+  }
+
+  const diff = current - previous;
+  const pct = previous !== 0 ? (diff / previous) * 100 : (diff !== 0 ? 100 : 0);
+  const improved = lowerIsBetter ? diff < 0 : diff > 0;
+  const neutral = Math.abs(diff) < 0.01;
+
+  return { diff, pct, improved, neutral, previous, current };
+}
+
+export function formatDelta(delta, suffix = '', invertDisplay = false) {
+  if (!delta || delta.neutral) return { text: '—', className: 'delta--neutral' };
+
+  const sign = delta.diff > 0 ? '+' : '';
+  const improved = invertDisplay ? !delta.improved : delta.improved;
+  const className = improved ? 'delta--good' : 'delta--bad';
+
+  if (Math.abs(delta.pct) >= 1) {
+    return { text: `${sign}${delta.pct.toFixed(0)}% vs prior`, className };
+  }
+
+  return { text: `${sign}${delta.diff.toFixed(1)}${suffix} vs prior`, className };
+}
+
+export function buildComparisonSummary(current, previous) {
+  return {
+    p1Count: computeDelta(current.p1Count, previous.p1Count, true),
+    p2Count: computeDelta(current.p2Count, previous.p2Count, true),
+    slaBreaches: computeDelta(current.slaBreaches, previous.slaBreaches, true),
+    slaBreachRate: computeDelta(current.slaBreachRate, previous.slaBreachRate, true),
+    avgCsat: computeDelta(current.avgCsat, previous.avgCsat, false),
+    avgMtta: computeDelta(current.avgMtta, previous.avgMtta, true),
+    avgMttr: computeDelta(current.avgMttr, previous.avgMttr, true),
+    reopenings: computeDelta(current.reopenings, previous.reopenings, true),
+    resolvedCount: computeDelta(current.resolvedCount, previous.resolvedCount, false),
+    closedInPeriodCount: computeDelta(current.closedInPeriodCount, previous.closedInPeriodCount, false),
+    totalTickets: computeDelta(current.totalTickets, previous.totalTickets, true),
+  };
+}
+
+export function ticketsToCsv(tickets) {
+  const headers = [
+    'Zendesk ID', 'Created', 'Account', 'TAM', 'Priority', 'Status', 'Subject',
+    'SLA Breached', 'CSAT', 'Reopens', 'MTTA (min)', 'MTTR (min)',
+  ];
+
+  const rows = tickets.map((t) => [
+    t.zendesk_id,
+    t.created_at,
+    t.account_name,
+    t.tam_name,
+    t.priority,
+    t.status,
+    `"${t.subject.replace(/"/g, '""')}"`,
+    t.sla.any_breach ? 'Yes' : 'No',
+    t.csat.score ?? '',
+    t.reopen_count,
+    t.mtta_minutes,
+    t.mttr_minutes,
+  ]);
+
+  return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+}
+
+export function buildMarkdownReport({
+  periodLabel,
+  filters,
+  summary,
+  comparison,
+  accountMetrics,
+  atRiskAccounts,
+  tams,
+}) {
+  const tamName = filters.tamId
+    ? tams.find((t) => t.id === filters.tamId)?.name
+    : 'All TAMs';
+  const csat = csatIndicator(summary.avgCsat, summary.csatPct);
+
+  let md = `# TAM Support Report\n\n`;
+  md += `**Period:** ${periodLabel}  \n`;
+  md += `**TAM:** ${tamName}  \n`;
+  md += `**Generated:** ${format(new Date(), 'MMM d, yyyy HH:mm')}\n\n`;
+
+  md += `## Executive Summary\n\n`;
+  md += `| Metric | Value | vs Prior Period |\n`;
+  md += `|--------|-------|------------------|\n`;
+  md += `| Total Tickets | ${summary.totalTickets} | ${formatDelta(comparison.totalTickets).text} |\n`;
+  md += `| P1 Tickets | ${summary.p1Count} | ${formatDelta(comparison.p1Count).text} |\n`;
+  md += `| P2 Tickets | ${summary.p2Count} | ${formatDelta(comparison.p2Count).text} |\n`;
+  md += `| SLA Breaches | ${summary.slaBreaches} (${summary.slaBreachRate.toFixed(1)}%) | ${formatDelta(comparison.slaBreaches).text} |\n`;
+  md += `| CSAT | ${summary.avgCsat?.toFixed(1) ?? 'N/A'} (${csat.label}) | ${formatDelta(comparison.avgCsat).text} |\n`;
+  md += `| MTTA | ${formatDuration(summary.avgMtta)} | ${formatDelta(comparison.avgMtta).text} |\n`;
+  md += `| MTTR | ${formatDuration(summary.avgMttr)} | ${formatDelta(comparison.avgMttr).text} |\n`;
+  md += `| Reopenings | ${summary.reopenings} | ${formatDelta(comparison.reopenings).text} |\n\n`;
+
+  if (atRiskAccounts.length) {
+    md += `## Accounts Requiring Attention (${atRiskAccounts.length})\n\n`;
+    for (const a of atRiskAccounts) {
+      md += `### ${a.account_name} — Health ${a.healthScore}/100\n`;
+      md += `- TAM: ${a.tam_name}\n`;
+      md += `- SLA breach rate: ${a.metrics.slaBreachRate.toFixed(1)}%\n`;
+      md += `- CSAT: ${a.metrics.avgCsat?.toFixed(1) ?? 'N/A'}\n`;
+      md += `- P1/P2: ${a.metrics.p1p2Count} | Reopenings: ${a.metrics.reopenings}\n\n`;
+    }
+  }
+
+  md += `## Account Breakdown\n\n`;
+  md += `| Account | Health | Tickets | P1 | P2 | SLA % | CSAT | MTTR |\n`;
+  md += `|---------|--------|---------|----|----|-------|------|------|\n`;
+
+  for (const a of accountMetrics) {
+    md += `| ${a.account_name} | ${a.healthScore ?? '—'} | ${a.metrics.totalTickets} | ${a.metrics.p1Count} | ${a.metrics.p2Count} | ${a.metrics.slaBreachRate.toFixed(1)}% | ${a.metrics.avgCsat?.toFixed(1) ?? '—'} | ${formatDuration(a.metrics.avgMttr)} |\n`;
+  }
+
+  md += `\n---\n*Report generated from TAM Support Intelligence Dashboard (synthetic Zendesk data)*\n`;
+  return md;
+}
+
+export function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
