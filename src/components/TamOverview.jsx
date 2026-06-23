@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import VacationIndicator from './VacationIndicator';
-import { formatDuration, csatIndicator } from '../utils/metrics';
+import { formatDuration, csatIndicator, getPortfolioActivityBreakdown, sumPortfolioActivityBreakdown } from '../utils/metrics';
 import { computeHealthScore, healthIndicator } from '../utils/health';
 import { KPI_KEYS } from '../utils/kpiDrilldown';
 
@@ -175,6 +175,18 @@ export default function TamOverview({ tamMetrics, allTams, onSelectAccount, onFi
           resolvedCount: 0,
           closedInPeriodCount: 0,
           handledCount: 0,
+          otherHandledCount: 0,
+          activityTotal: 0,
+          activityBreakdown: {
+            created: 0,
+            other: 0,
+            p1p2: 0,
+            resolved: 0,
+            closed: 0,
+            ip: 0,
+            wfr: 0,
+            esc: 0,
+          },
           dispositionCounts: {},
           avgCsat: null,
           avgMtta: null,
@@ -189,14 +201,55 @@ export default function TamOverview({ tamMetrics, allTams, onSelectAccount, onFi
     onDrilldown?.(kpiKey, { tamId });
   };
 
+  const portfolioBreakdown = displayTams.reduce(
+    (acc, tam) => {
+      const breakdown = getPortfolioActivityBreakdown(tam.metrics);
+      return {
+        created: acc.created + breakdown.created,
+        other: acc.other + breakdown.other,
+        p1p2: acc.p1p2 + breakdown.p1p2,
+        resolved: acc.resolved + breakdown.resolved,
+        closed: acc.closed + breakdown.closed,
+        ip: acc.ip + breakdown.ip,
+        wfr: acc.wfr + breakdown.wfr,
+        esc: acc.esc + breakdown.esc,
+      };
+    },
+    { created: 0, other: 0, p1p2: 0, resolved: 0, closed: 0, ip: 0, wfr: 0, esc: 0 },
+  );
+  const portfolioTotal = sumPortfolioActivityBreakdown(portfolioBreakdown);
+
+  const PORTFOLIO_SUMMARY_ITEMS = [
+    { key: 'created', label: 'Created' },
+    { key: 'other', label: 'Other' },
+    { key: 'p1p2', label: 'P1/P2' },
+    { key: 'resolved', label: 'Resolved' },
+    { key: 'closed', label: 'Closed' },
+    { key: 'ip', label: 'IP' },
+    { key: 'wfr', label: 'WFR' },
+    { key: 'esc', label: 'Esc' },
+  ];
+
   return (
     <article className="panel tam-overview-panel">
       <header className="panel__header">
         <h2>TAM Portfolio Overview</h2>
         <p>
-          The number beside each TAM is total tickets handled in the period (created, resolved,
-          closed, or reopened). Expand a card for account detail — click Resolved / Closed to drill down.
+          Total = Created + Other + P1/P2 + Resolved + Closed + IP + WFR + Esc within the
+          selected period. Expand a card for account detail.
         </p>
+        <div className="tam-overview-summary">
+          <span className="tam-overview-summary__item tam-overview-summary__item--total">
+            <span className="tam-overview-summary__label">Total</span>
+            <span className="tam-overview-summary__value">{portfolioTotal}</span>
+          </span>
+          {PORTFOLIO_SUMMARY_ITEMS.map(({ key, label }) => (
+            <span key={key} className="tam-overview-summary__item">
+              <span className="tam-overview-summary__label">{label}</span>
+              <span className="tam-overview-summary__value">{portfolioBreakdown[key]}</span>
+            </span>
+          ))}
+        </div>
       </header>
 
       <div className="tam-grid tam-grid--expandable">
@@ -205,6 +258,7 @@ export default function TamOverview({ tamMetrics, allTams, onSelectAccount, onFi
           const expanded = expandedId === tam.tam_id;
           const dc = tam.metrics.dispositionCounts ?? {};
           const tamMeta = allTams.find((t) => t.id === tam.tam_id);
+          const activityTotal = tam.metrics.activityTotal ?? sumPortfolioActivityBreakdown(getPortfolioActivityBreakdown(tam.metrics));
 
           return (
             <div key={tam.tam_id} className={`tam-card tam-card--expandable ${expanded ? 'tam-card--expanded' : ''}`}>
@@ -216,11 +270,9 @@ export default function TamOverview({ tamMetrics, allTams, onSelectAccount, onFi
               >
                 <div className="tam-card__title-row">
                   <h3>
-                    <span
-                      className="tam-card__handled"
-                      title="Tickets handled in the selected period (created, resolved, closed, or reopened)"
-                    >
-                      {tam.metrics.handledCount ?? 0}
+                    <span className="tam-card__total">
+                      <span className="tam-card__total-label">Total</span>
+                      <span className="tam-card__total-handled">{activityTotal}</span>
                     </span>
                     <span className="tam-card__name">{tam.tam_name}</span>
                     {tamMeta?.on_vacation && <VacationIndicator showLabel />}
@@ -236,6 +288,11 @@ export default function TamOverview({ tamMetrics, allTams, onSelectAccount, onFi
                     label="Created"
                     value={tam.metrics.totalTickets}
                     title="Tickets created in the selected period"
+                  />
+                  <TamStatCell
+                    label="Other"
+                    value={tam.metrics.otherHandledCount ?? 0}
+                    title="Resolved, closed, or reopened in period on tickets not created in this period"
                   />
                   <TamStatCell
                     label="P1/P2"

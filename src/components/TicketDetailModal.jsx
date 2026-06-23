@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
-import { formatDuration } from '../utils/metrics';
+import { formatDuration, getTicketMttaMinutes, getTicketMttrMinutes } from '../utils/metrics';
 import { getZendeskTicketUrl } from '../utils/zendesk';
 import { FIELD_OPTIONS } from '../utils/zendeskFieldOptions';
 import { useHorizontalResize, PaneResizeHandle, usePaneLayoutStorage } from '../hooks/usePaneResize';
@@ -327,8 +327,20 @@ export default function TicketDetailModal({ ticket, onClose }) {
                 <summary>Sinch technical fields</summary>
                 <ZdInput label="Project ID" value={sinch.project_id} mono />
                 <ZdInput label="Service plan" value={sinch.service_plan_id} mono />
-                <ZdInput label="MTTA" value={formatDuration(ticket.mtta_minutes)} />
-                <ZdInput label="MTTR" value={formatDuration(ticket.mttr_minutes)} />
+                <ZdInput label="MTTA (reply time)" value={formatDuration(getTicketMttaMinutes(ticket))} />
+                <ZdInput label="MTTR (full resolution)" value={formatDuration(getTicketMttrMinutes(ticket))} />
+                {ticket.zendesk?.metrics?.reply_time_in_minutes && (
+                  <ZdInput
+                    label="Reply time (business hrs)"
+                    value={formatDuration(ticket.zendesk.metrics.reply_time_in_minutes.business)}
+                  />
+                )}
+                {ticket.zendesk?.metrics?.full_resolution_time_in_minutes && (
+                  <ZdInput
+                    label="Resolution time (business hrs)"
+                    value={formatDuration(ticket.zendesk.metrics.full_resolution_time_in_minutes.business)}
+                  />
+                )}
                 <ZdInput label="CSAT" value={ticket.csat?.score != null ? `${ticket.csat.score}/5` : ''} />
                 {ticket.csat?.comment && (
                   <ZdTextarea label="CSAT comment" value={ticket.csat.comment} rows={3} />

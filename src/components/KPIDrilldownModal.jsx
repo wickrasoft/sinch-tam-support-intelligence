@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
-import { formatDuration, countTicketReopenEventsInPeriod, csatIndicator, computeSummary, filterTickets } from '../utils/metrics';
+import { formatDuration, countTicketReopenEventsInPeriod, csatIndicator, computeSummary, filterTickets, getTicketMttaMinutes, getTicketMttrMinutes } from '../utils/metrics';
 import { formatDelta, buildComparisonSummary } from '../utils/health';
 import {
   KPI_CONFIG,
@@ -90,8 +90,8 @@ function TicketMiniTable({ tickets, kpiKey, onOpenTicket, filters }) {
                 </>
               )}
               <td className="data-table__subject" title={t.subject}>{t.subject}</td>
-              {kpiKey === KPI_KEYS.MTTA && <td>{formatDuration(t.mtta_minutes)}</td>}
-              {kpiKey === KPI_KEYS.MTTR && <td>{formatDuration(t.mttr_minutes)}</td>}
+              {kpiKey === KPI_KEYS.MTTA && <td>{formatDuration(getTicketMttaMinutes(t))}</td>}
+              {kpiKey === KPI_KEYS.MTTR && <td>{formatDuration(getTicketMttrMinutes(t))}</td>}
               {kpiKey === KPI_KEYS.REOPENINGS && (
                 <>
                   <td>{t.reopen_count > 0 ? t.reopen_count : '—'}</td>

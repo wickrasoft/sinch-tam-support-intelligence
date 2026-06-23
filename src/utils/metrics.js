@@ -15,6 +15,7 @@ import {
   subDays,
   subMonths,
   subYears,
+  differenceInMinutes,
 } from 'date-fns';
 
 export const PERIOD_OPTIONS = [
@@ -127,6 +128,20 @@ export function getReopenedTicketsInPeriod(tickets, filters) {
     });
 }
 
+export function getTicketMttaMinutes(ticket) {
+  const fromMetrics = ticket.zendesk?.metrics?.reply_time_in_minutes?.calendar;
+  if (fromMetrics != null) return fromMetrics;
+  if (!ticket.first_response_at) return null;
+  return differenceInMinutes(parseISO(ticket.first_response_at), parseISO(ticket.created_at));
+}
+
+export function getTicketMttrMinutes(ticket) {
+  const fromMetrics = ticket.zendesk?.metrics?.full_resolution_time_in_minutes?.calendar;
+  if (fromMetrics != null) return fromMetrics;
+  if (!ticket.solved_at) return null;
+  return differenceInMinutes(parseISO(ticket.solved_at), parseISO(ticket.created_at));
+}
+
 export function getCsatRatedAt(ticket) {
   if (!ticket.csat?.rated || ticket.csat.score == null) return null;
   if (ticket.csat.rated_at) return parseISO(ticket.csat.rated_at);
@@ -216,24 +231,34 @@ function getTicketScope(allTickets, filters) {
   });
 }
 
-export function getTicketsHandledInPeriod(allTickets, filters) {
+export function getTicketsHandledBreakdown(allTickets, filters) {
   const scope = getTicketScope(allTickets, filters);
-  const ids = new Set();
+  const createdTickets = filterTickets(allTickets, filters);
+  const createdIds = new Set(createdTickets.map((ticket) => ticket.id));
+  const otherIds = new Set();
 
-  for (const ticket of filterTickets(allTickets, filters)) {
-    ids.add(ticket.id);
-  }
   for (const ticket of getResolvedTicketsInPeriod(scope, filters)) {
-    ids.add(ticket.id);
+    if (!createdIds.has(ticket.id)) otherIds.add(ticket.id);
   }
   for (const ticket of getClosedTicketsInPeriod(scope, filters)) {
-    ids.add(ticket.id);
+    if (!createdIds.has(ticket.id)) otherIds.add(ticket.id);
   }
   for (const ticket of getReopenedTicketsInPeriod(scope, filters)) {
-    ids.add(ticket.id);
+    if (!createdIds.has(ticket.id)) otherIds.add(ticket.id);
   }
 
-  return ids.size;
+  const createdCount = createdTickets.length;
+  const otherCount = otherIds.size;
+
+  return {
+    createdCount,
+    otherCount,
+    totalCount: createdCount + otherCount,
+  };
+}
+
+export function getTicketsHandledInPeriod(allTickets, filters) {
+  return getTicketsHandledBreakdown(allTickets, filters).totalCount;
 }
 
 export function getCsatOfferedTicketsInPeriod(tickets, filters) {
@@ -272,6 +297,37 @@ export function groupCsatByAccount(ratedTickets) {
     .sort((a, b) => b.avgCsat - a.avgCsat);
 }
 
+export function getPortfolioActivityBreakdown(metrics) {
+  const dc = metrics.dispositionCounts ?? {};
+  return {
+    created: metrics.totalTickets ?? 0,
+    other: metrics.otherHandledCount ?? 0,
+    p1p2: metrics.p1p2Count ?? 0,
+    resolved: metrics.resolvedCount ?? 0,
+    closed: metrics.closedInPeriodCount ?? 0,
+    ip: dc.in_progress ?? 0,
+    wfr: dc.waiting_for_response ?? 0,
+    esc: dc.escalated ?? 0,
+  };
+}
+
+export function sumPortfolioActivityBreakdown(breakdown) {
+  return (
+    breakdown.created
+    + breakdown.other
+    + breakdown.p1p2
+    + breakdown.resolved
+    + breakdown.closed
+    + breakdown.ip
+    + breakdown.wfr
+    + breakdown.esc
+  );
+}
+
+export function getPortfolioActivityTotal(metrics) {
+  return sumPortfolioActivityBreakdown(getPortfolioActivityBreakdown(metrics));
+}
+
 export function computeSummary(tickets, allTickets, filters) {
   const p1Count = tickets.filter((t) => t.priority === 'P1').length;
   const p2Count = tickets.filter((t) => t.priority === 'P2').length;
@@ -286,21 +342,23 @@ export function computeSummary(tickets, allTickets, filters) {
   const csatGood = ratedInPeriod.filter((t) => t.csat.score >= 4).length;
   const csatPct = ratedInPeriod.length ? (csatGood / ratedInPeriod.length) * 100 : null;
 
-  const withMtta = tickets.filter((t) => t.mtta_minutes != null);
+  const withMtta = tickets.map((t) => getTicketMttaMinutes(t)).filter((v) => v != null);
   const avgMtta = withMtta.length
-    ? withMtta.reduce((sum, t) => sum + t.mtta_minutes, 0) / withMtta.length
+    ? withMtta.reduce((sum, v) => sum + v, 0) / withMtta.length
     : null;
 
-  const withMttr = tickets.filter((t) => t.mttr_minutes != null);
+  const withMttr = tickets.map((t) => getTicketMttrMinutes(t)).filter((v) => v != null);
   const avgMttr = withMttr.length
-    ? withMttr.reduce((sum, t) => sum + t.mttr_minutes, 0) / withMttr.length
+    ? withMttr.reduce((sum, v) => sum + v, 0) / withMttr.length
     : null;
 
   const reopenings = countReopeningsInPeriod(allTickets, filters);
   const ticketsWithReopens = getReopenedTicketsInPeriod(allTickets, filters).length;
   const resolvedCount = getResolvedTicketsInPeriod(tickets, filters).length;
   const closedInPeriodCount = getClosedTicketsInPeriod(tickets, filters).length;
-  const handledCount = getTicketsHandledInPeriod(allTickets, filters);
+  const handledBreakdown = getTicketsHandledBreakdown(allTickets, filters);
+  const handledCount = handledBreakdown.totalCount;
+  const otherHandledCount = handledBreakdown.otherCount;
 
   const dispositionCounts = {
     in_progress: tickets.filter((t) => t.disposition === 'in_progress').length,
@@ -311,6 +369,16 @@ export function computeSummary(tickets, allTickets, filters) {
   };
 
   const needsAttention = tickets.filter((t) => t.needs_attention).length;
+
+  const activityBreakdown = getPortfolioActivityBreakdown({
+    totalTickets: tickets.length,
+    otherHandledCount,
+    p1p2Count: p1Count + p2Count,
+    resolvedCount,
+    closedInPeriodCount,
+    dispositionCounts,
+  });
+  const activityTotal = sumPortfolioActivityBreakdown(activityBreakdown);
 
   return {
     totalTickets: tickets.length,
@@ -331,6 +399,9 @@ export function computeSummary(tickets, allTickets, filters) {
     resolvedCount,
     closedInPeriodCount,
     handledCount,
+    otherHandledCount,
+    activityBreakdown,
+    activityTotal,
     dispositionCounts,
     needsAttention,
   };
@@ -409,7 +480,7 @@ export function groupByTam(tickets, allTickets, filters, allAccounts = [], allTa
         tamId: group.tam_id,
       }),
     };
-  }).sort((a, b) => b.metrics.handledCount - a.metrics.handledCount);
+  }).sort((a, b) => b.metrics.activityTotal - a.metrics.activityTotal);
 }
 
 export function getTicketsNeedingAttention(tickets, limit = 50) {

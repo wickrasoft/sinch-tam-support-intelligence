@@ -272,6 +272,44 @@ function addMinutes(date, minutes) {
   return new Date(date.getTime() + minutes * 60 * 1000);
 }
 
+function diffMinutes(from, to) {
+  return Math.max(0, Math.round((to.getTime() - from.getTime()) / 60000));
+}
+
+function estimateBusinessMinutes(calendarMinutes, rng) {
+  const factor = 0.28 + rng() * 0.14;
+  return Math.round(calendarMinutes * factor);
+}
+
+function buildZendeskMetrics({ createdAt, firstResponseAt, solvedAt, rng }) {
+  const replyCalendar = firstResponseAt ? diffMinutes(createdAt, firstResponseAt) : null;
+  const resolutionCalendar = solvedAt ? diffMinutes(createdAt, solvedAt) : null;
+  const onHoldCalendar = replyCalendar != null && solvedAt != null && rng() < 0.35
+    ? Math.round(rng() * Math.max(30, replyCalendar * 0.6))
+    : 0;
+  const agentWorkCalendar = replyCalendar != null
+    ? (resolutionCalendar != null
+      ? Math.max(15, resolutionCalendar - onHoldCalendar)
+      : replyCalendar)
+    : null;
+
+  const toMetric = (calendar) => (calendar != null ? {
+    calendar,
+    business: estimateBusinessMinutes(calendar, rng),
+  } : null);
+
+  return {
+    reply_time_in_minutes: toMetric(replyCalendar),
+    full_resolution_time_in_minutes: toMetric(resolutionCalendar),
+    requester_wait_time_in_minutes: toMetric(resolutionCalendar ?? replyCalendar),
+    agent_work_time_in_minutes: toMetric(agentWorkCalendar),
+    on_hold_time_in_minutes: {
+      calendar: onHoldCalendar,
+      business: estimateBusinessMinutes(onHoldCalendar, rng),
+    },
+  };
+}
+
 function mapDispositionToStatus(disposition) {
   switch (disposition) {
     case 'in_progress': return 'open';
@@ -312,13 +350,18 @@ function buildConversation(subjectEntry, account, tam, rng, createdAt, firstResp
       at: createdAt.toISOString(),
       body: `Hi Sinch TAM team,\n\nWe're seeing issues with: ${subjectEntry.subject}\n\nAccount: ${account.name}\nProduct: ${subjectEntry.product}\nThis is affecting our ${account.industry} messaging workflows. Please advise urgently.\n\nThanks,\n${contactName}`,
     },
-    {
-      author: 'agent',
-      author_name: tam.name,
-      at: firstResponseAt.toISOString(),
-      body: `Hi ${contactName.split(' ')[0]},\n\nThank you for reaching out. I'm ${tam.name}, your dedicated TAM. I've acknowledged this ${subjectEntry.product} issue and am investigating with our ${subjectEntry.category} team.\n\nI'll update you within the SLA window.`,
-    },
   ];
+
+  if (!firstResponseAt) {
+    return { contactName, contactEmail, threads };
+  }
+
+  threads.push({
+    author: 'agent',
+    author_name: tam.name,
+    at: firstResponseAt.toISOString(),
+    body: `Hi ${contactName.split(' ')[0]},\n\nThank you for reaching out. I'm ${tam.name}, your dedicated TAM. I've acknowledged this ${subjectEntry.product} issue and am investigating with our ${subjectEntry.category} team.\n\nI'll update you within the SLA window.`,
+  });
 
   if (disposition === 'waiting_for_response') {
     threads.push({
@@ -490,26 +533,45 @@ function generateTicket(id, account, rng, createdAt, endDate) {
   const mttaMultiplier = forceBreach && rng() > 0.5 ? 1.2 + rng() * 2.5 : 0.3 + rng() * 0.9;
   const mttrMultiplier = forceBreach ? 1.3 + rng() * 3.0 : 0.4 + rng() * 1.2;
 
-  const mttaMinutes = Math.round(sla.first_response * mttaMultiplier);
-  const mttrMinutes = Math.round(sla.resolution * mttrMultiplier);
+  const pendingFirstResponse = isRecent
+    && ['in_progress', 'waiting_for_response', 'escalated'].includes(disposition)
+    && rng() < 0.1;
 
-  const firstResponseAt = addMinutes(createdAt, mttaMinutes);
-  const solvedAt = addMinutes(createdAt, mttrMinutes);
-  const closedAt = disposition === 'closed'
+  const plannedMtta = Math.round(sla.first_response * mttaMultiplier);
+  const plannedMttr = Math.round(sla.resolution * mttrMultiplier);
+
+  const firstResponseAt = pendingFirstResponse ? null : addMinutes(createdAt, plannedMtta);
+  const isResolved = ['temp_resolution', 'closed'].includes(disposition);
+  const solvedAt = isResolved ? addMinutes(createdAt, plannedMttr) : null;
+  const closedAt = disposition === 'closed' && solvedAt
     ? addMinutes(solvedAt, Math.round(rng() * 480))
     : null;
 
-  const firstResponseBreached = mttaMinutes > sla.first_response;
-  const resolutionBreached = mttrMinutes > sla.resolution;
+  const elapsedAtReference = diffMinutes(createdAt, endDate);
+  const mttaMinutes = firstResponseAt ? diffMinutes(createdAt, firstResponseAt) : null;
+  const mttrMinutes = solvedAt ? diffMinutes(createdAt, solvedAt) : null;
 
-  const willReopen = disposition !== 'closed' && rng() < profile.reopenRate;
-  const reopenCount = willReopen ? Math.floor(1 + rng() * 3) : (disposition === 'closed' && rng() < profile.reopenRate * 0.5 ? 1 : 0);
+  const firstResponseBreached = firstResponseAt
+    ? mttaMinutes > sla.first_response
+    : elapsedAtReference > sla.first_response;
+  const resolutionBreached = solvedAt
+    ? mttrMinutes > sla.resolution
+    : !isResolved && elapsedAtReference > sla.resolution;
+
+  let reopenCount = 0;
   const reopenEvents = [];
-  let lastEvent = solvedAt;
-  for (let r = 0; r < reopenCount; r++) {
-    lastEvent = addMinutes(lastEvent, Math.round(24 * 60 + rng() * 7 * 24 * 60));
-    reopenEvents.push({ reopened_at: lastEvent.toISOString(), event_number: r + 1 });
+  if (solvedAt) {
+    reopenCount = disposition === 'temp_resolution' && rng() < profile.reopenRate
+      ? Math.floor(1 + rng() * 3)
+      : (disposition === 'closed' && rng() < profile.reopenRate * 0.5 ? 1 : 0);
+    let lastEvent = solvedAt;
+    for (let r = 0; r < reopenCount; r++) {
+      lastEvent = addMinutes(lastEvent, Math.round(24 * 60 + rng() * 7 * 24 * 60));
+      reopenEvents.push({ reopened_at: lastEvent.toISOString(), event_number: r + 1 });
+    }
   }
+
+  const willReopen = reopenCount > 0;
 
   const csatOffered = disposition === 'closed' && rng() > 0.12;
   let csatScore = null;
@@ -597,8 +659,8 @@ function generateTicket(id, account, rng, createdAt, endDate) {
     },
     conversation: threads,
     created_at: createdAt.toISOString(),
-    first_response_at: firstResponseAt.toISOString(),
-    solved_at: ['temp_resolution', 'closed'].includes(disposition) ? solvedAt.toISOString() : null,
+    first_response_at: firstResponseAt?.toISOString() ?? null,
+    solved_at: solvedAt?.toISOString() ?? null,
     closed_at: closedAt?.toISOString() ?? null,
     sla: {
       first_response_target_minutes: sla.first_response,
@@ -608,7 +670,7 @@ function generateTicket(id, account, rng, createdAt, endDate) {
       any_breach: firstResponseBreached || resolutionBreached,
     },
     mtta_minutes: mttaMinutes,
-    mttr_minutes: ['temp_resolution', 'closed'].includes(disposition) ? mttrMinutes : null,
+    mttr_minutes: mttrMinutes,
     csat,
     reopen_count: reopenCount,
     reopen_events: reopenEvents,
@@ -636,8 +698,15 @@ function generateTicket(id, account, rng, createdAt, endDate) {
     firstResponseAt,
     solvedAt,
   });
+  ticket.zendesk.metrics = buildZendeskMetrics({
+    createdAt,
+    firstResponseAt,
+    solvedAt,
+    rng,
+  });
 
-  let lastUpdated = new Date(firstResponseAt);
+  let lastUpdated = new Date(createdAt);
+  if (firstResponseAt) lastUpdated = new Date(firstResponseAt);
   for (const msg of threads) {
     const t = new Date(msg.at);
     if (t > lastUpdated) lastUpdated = t;
@@ -695,6 +764,10 @@ function generateDataset() {
       total_tams: TAMS.length,
       total_accounts: ACCOUNTS.length,
       sla_policy: 'Priority-based SLA targets aligned with Zendesk Enterprise policy',
+      metric_definitions: {
+        mtta: 'Zendesk reply_time_in_minutes (calendar) — created_at → first public agent reply',
+        mttr: 'Zendesk full_resolution_time_in_minutes (calendar) — created_at → solved_at',
+      },
       dispositions: ['in_progress', 'waiting_for_response', 'temp_resolution', 'closed', 'escalated'],
       regions: SINCH_REGIONS,
       tam_regions: TAM_REGIONS,

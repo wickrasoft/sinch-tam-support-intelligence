@@ -5,6 +5,8 @@ import {
   getCsatOfferedTicketsInPeriod,
   getResolvedTicketsInPeriod,
   getClosedTicketsInPeriod,
+  getTicketMttaMinutes,
+  getTicketMttrMinutes,
   countTicketReopenEventsInPeriod,
 } from './metrics';
 
@@ -80,11 +82,13 @@ export function getTicketsForKpi(tickets, kpiKey, context = {}) {
       }
       return tickets.filter((t) => t.csat.rated);
     case KPI_KEYS.MTTA:
-      return [...tickets].sort((a, b) => (b.mtta_minutes ?? 0) - (a.mtta_minutes ?? 0));
+      return [...tickets]
+        .filter((t) => getTicketMttaMinutes(t) != null)
+        .sort((a, b) => getTicketMttaMinutes(b) - getTicketMttaMinutes(a));
     case KPI_KEYS.MTTR:
       return tickets
-        .filter((t) => t.mttr_minutes != null)
-        .sort((a, b) => b.mttr_minutes - a.mttr_minutes);
+        .filter((t) => getTicketMttrMinutes(t) != null)
+        .sort((a, b) => getTicketMttrMinutes(b) - getTicketMttrMinutes(a));
     case KPI_KEYS.REOPENINGS:
       if (allTickets && filters) {
         return getReopenedTicketsInPeriod(allTickets, filters);
@@ -131,8 +135,8 @@ export function getAccountBreakdown(tickets, kpiKey, filters) {
     if (kpiKey === KPI_KEYS.REOPENINGS && filters) {
       row.reopenEvents += countTicketReopenEventsInPeriod(t, filters);
     }
-    if (t.mtta_minutes != null) row.avgMtta.push(t.mtta_minutes);
-    if (t.mttr_minutes != null) row.avgMttr.push(t.mttr_minutes);
+    if (getTicketMttaMinutes(t) != null) row.avgMtta.push(getTicketMttaMinutes(t));
+    if (getTicketMttrMinutes(t) != null) row.avgMttr.push(getTicketMttrMinutes(t));
     if (t.csat.rated) row.csatScores.push(t.csat.score);
   }
 

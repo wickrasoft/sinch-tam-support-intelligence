@@ -59,7 +59,7 @@ The dashboard components and metrics engine would remain unchanged.
 
 ---
 
-## Session Checkpoint — 22 Jun 2026
+## Session Checkpoint — 22 Jun 2026 (end of day)
 
 Work saved in git. Resume with:
 
@@ -71,7 +71,7 @@ npm run dev          # http://localhost:5173
 ### Dataset (current)
 
 - **15 TAMs**, **25 accounts**, **6,251 tickets** (Jan 2024 → Jun 2026)
-- Regenerate: `npm run generate-data`
+- Regenerate: `npm run generate-data` (seed `42`, includes Zendesk metric fields + realistic MTTA/MTTR)
 
 ### Features completed this session
 
@@ -82,15 +82,19 @@ npm run dev          # http://localhost:5173
 | **Filters** | Disposition filter, TAM regions (US / EMEA / APAC / LATAM) |
 | **CSAT** | Period-based ratings (`rated_at`), full response list, drill-down |
 | **Reopenings** | Period-based counts + clickable drill-down |
-| **TAM Portfolio Overview** | Expandable cards, handled-count badge, Resolved/Closed drill-down, aligned stats |
+| **TAM Portfolio Overview** | Expandable cards, Total badge (number only), Created/Other/P1/P2/Resolved/Closed/IP/WFR/Esc stats, portfolio summary pills, Resolved/Closed drill-down |
+| **MTTA / MTTR** | Timestamp-driven; `ticket.zendesk.metrics` fields; ~10% open tickets pending first reply |
 | **Branding** | Official Sinch logo on yellow (`#FFDD00`) badge, Sinch favicon |
 
 ### Key metric rules (TAM Portfolio)
 
-- **Handled badge** (beside name): unique tickets with create / resolve / close / reopen activity in period
+- **Total** (badge): sum of Created + Other + P1/P2 + Resolved + Closed + IP + WFR + Esc in period (number only in UI)
 - **Created**: tickets created in period
+- **Other**: resolve / close / reopen activity in period on tickets *not* created in period
+- **P1/P2**: priority count among tickets created in period
 - **Resolved / Closed**: created in period AND solved/closed in same period
-- **IP / WFR / Esc**: disposition of tickets created in period
+- **IP / WFR / Esc**: open dispositions on tickets created in period
+- TAM cards sorted by `activityTotal`
 
 ### Default demo settings
 
@@ -100,9 +104,11 @@ npm run dev          # http://localhost:5173
 
 ### Key files touched recently
 
-- `src/components/TamOverview.jsx` — TAM portfolio UI
-- `src/utils/metrics.js` — `getTicketsHandledInPeriod`, period-based CSAT/resolved/closed
+- `src/components/TamOverview.jsx` — TAM portfolio UI + Total badge
+- `src/utils/metrics.js` — `getPortfolioActivityBreakdown`, `getTicketsHandledBreakdown`, MTTA/MTTR helpers
+- `scripts/generateData.js` — Zendesk metrics, SLA/reply realism
+- `src/data/tickets.json` — regenerated dataset
 - `src/utils/kpiDrilldown.js` — RESOLVED / CLOSED KPI keys
 - `public/sinch-logo.svg` — black wordmark on yellow header wrap
-- `src/App.jsx` / `src/App.css` — header branding
+- `src/App.jsx` / `src/App.css` — header branding + TAM overview styles
 
