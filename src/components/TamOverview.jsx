@@ -554,6 +554,7 @@ export default function TamOverview({
                       </span>
                     </h3>
                     <div className="tam-card__corner">
+                      <span className="tam-card__chevron" aria-hidden="true">{expanded ? '▲' : '▼'}</span>
                       <div className="tam-card__badge-group">
                         <button
                           type="button"
@@ -573,7 +574,6 @@ export default function TamOverview({
                           onDrilldown={onDrilldown}
                         />
                       </div>
-                      <span className="tam-card__chevron">{expanded ? '▲' : '▼'}</span>
                     </div>
                   </div>
                   <div className="tam-card__meta-row">

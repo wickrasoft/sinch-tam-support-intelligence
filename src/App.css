@@ -3236,9 +3236,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.2rem;
+  gap: 0.25rem;
   flex-shrink: 0;
-  margin-top: -0.05rem;
+}
+
+.tam-card__chevron {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  line-height: 1;
+  padding: 0.05rem 0.1rem 0;
 }
 
 .tam-card__online-badge {
@@ -3288,12 +3294,6 @@ body {
 
 .tam-card__online-icon .tam-status-icon__emoji {
   font-size: 1.15rem;
-}
-
-.tam-card__chevron {
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  line-height: 1;
 }
 
 .tam-card__title-row h3 {
@@ -3534,7 +3534,8 @@ body {
 }
 
 .tam-card__accounts-count {
-  font-size: 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 500;
   color: var(--text-muted);
   display: block;
   margin: 0;
@@ -3542,10 +3543,10 @@ body {
 
 .tam-card__availability-detail {
   display: block;
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
   margin: 0;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
 .tam-card__stats--portfolio {
@@ -4858,7 +4859,7 @@ body {
   }
 
   .tam-card__availability-detail {
-    font-size: 0.68rem;
+    font-size: 0.76rem;
   }
 }
 
