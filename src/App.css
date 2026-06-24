@@ -29,12 +29,15 @@
 body {
   min-height: 100vh;
   background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  overflow-x: clip;
 }
 
 .app {
-  max-width: 1400px;
+  max-width: min(1400px, 100%);
   margin: 0 auto;
   padding: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .header {
@@ -4092,5 +4095,209 @@ body {
 .filter-banner .stale-threshold-chip {
   padding: 0.2rem 0.4rem;
   font-size: 0.65rem;
+}
+
+/* Mobile layout fixes */
+@media (max-width: 768px) {
+  .app {
+    padding: 1rem 0.75rem;
+  }
+
+  .header {
+    margin-bottom: 1rem;
+  }
+
+  .header .app-title {
+    font-size: 1.2rem;
+  }
+
+  .header__meta {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .filter-bar {
+    padding: 0.85rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .panel {
+    padding: 0.85rem;
+  }
+
+  .filter-bar__group {
+    min-width: calc(50% - 0.5rem);
+    flex: 1 1 calc(50% - 0.5rem);
+  }
+
+  .filter-bar__reset {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tab-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tab-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-nav__btn {
+    flex-shrink: 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .panel__header--row > div {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .tam-overview-panel .panel__header--row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .tam-overview-online {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .tam-overview-summary--single-row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    flex-wrap: unset;
+    overflow-x: visible;
+    width: 100%;
+    max-width: 100%;
+    gap: 0.35rem;
+    padding-bottom: 0;
+  }
+
+  .tam-overview-summary--single-row .tam-overview-summary__item {
+    flex: unset;
+    min-width: 0;
+    width: 100%;
+    align-items: center;
+    text-align: center;
+    padding: 0.35rem 0.25rem;
+  }
+
+  .tam-overview-summary--compact .tam-overview-summary__label {
+    font-size: 0.6rem;
+  }
+
+  .tam-overview-summary--compact .tam-overview-summary__value {
+    font-size: 0.95rem;
+  }
+
+  .ops-panel__count {
+    font-size: 1.5rem;
+  }
+
+  .stale-threshold-chip {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.75rem;
+    min-height: 2.25rem;
+  }
+
+  .ops-threshold-chips {
+    gap: 0.4rem;
+  }
+
+  .ops-ticket-item {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.35rem 0.45rem;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  .ops-ticket-item__subject {
+    flex: 1 1 100%;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.35;
+  }
+
+  .ops-ticket-item__meta {
+    flex: 1 1 100%;
+    max-width: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+  }
+
+  .ops-ticket-item__account,
+  .ops-ticket-item__tam {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    font-size: 0.72rem;
+  }
+
+  .tam-card__stats--row-1 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tam-card__stats--row-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tam-card__meta-row {
+    padding-right: 0;
+  }
+
+  .tam-card__availability-detail {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app {
+    padding: 0.75rem 0.6rem;
+  }
+
+  .kpi-grid {
+    gap: 0.5rem;
+  }
+
+  .tam-overview-summary--single-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tam-card__title-row h3 {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .tam-card__name {
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .ops-ticket-list {
+    max-height: none;
+  }
+
+  .alert-panel {
+    min-height: min(300px, 38vh);
+    max-height: min(360px, 42vh);
+  }
 }
 
