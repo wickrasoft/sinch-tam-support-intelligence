@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback } from 'react';
 import { useDataset } from './hooks/useDataset';
 import DataLoadingScreen from './components/DataLoadingScreen';
 import AppTitle from './components/AppTitle';
+import ThemeSwitcher from './components/ThemeSwitcher';
 import FilterBar from './components/FilterBar';
 import TabNav from './components/TabNav';
 import ExportBar from './components/ExportBar';
@@ -580,6 +581,7 @@ function DashboardApp({ dataset }) {
           </div>
         </div>
         <div className="header__meta">
+          <ThemeSwitcher />
           <span className="badge badge--demo">{meta.source}</span>
           <span className="header__range">{periodLabel}</span>
         </div>
