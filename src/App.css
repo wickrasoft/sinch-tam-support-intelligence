@@ -914,6 +914,18 @@ body {
   letter-spacing: 0.03em;
 }
 
+.panel .recharts-cartesian-axis-tick text {
+  fill: var(--text) !important;
+}
+
+.panel .recharts-legend-item-text {
+  color: var(--text-muted) !important;
+}
+
+.panel .recharts-cartesian-grid line {
+  stroke: rgba(148, 163, 184, 0.18);
+}
+
 .panel--chart-drilldown .recharts-bar-rectangle {
   transition: opacity 0.15s;
 }
