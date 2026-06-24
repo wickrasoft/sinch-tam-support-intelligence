@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import { useDataset } from './hooks/useDataset';
 import DataLoadingScreen from './components/DataLoadingScreen';
+import AppTitle from './components/AppTitle';
 import FilterBar from './components/FilterBar';
 import TabNav from './components/TabNav';
 import ExportBar from './components/ExportBar';
@@ -570,17 +571,8 @@ function DashboardApp({ dataset }) {
     <div className="app">
       <header className="header">
         <div className="header__brand">
-          <div className="header__logo-wrap">
-            <img
-              src="/sinch-logo.png"
-              alt="Sinch"
-              className="header__logo"
-              width="214"
-              height="86"
-            />
-          </div>
           <div>
-            <h1>Sinch TAM Support Intelligence</h1>
+            <AppTitle />
             <p className="header__subtitle">
               {tams.length} TAMs · {accounts.length} Sinch messaging accounts · SMS, 10DLC, Conversation API
             </p>
