@@ -37,9 +37,6 @@ export default function TicketsNeedingAttention({ tickets, onSelectTicket, onOpe
             <span className="alert-panel__count">{tickets.length}</span>
           )}
         </div>
-        <p>
-          Click {tickets.length} to drill down · P1/P2, SLA breach, escalated, WFR, temp resolution, reopened
-        </p>
       </header>
 
       <div className="alert-panel__scroll alert-panel__scroll--full">

@@ -205,8 +205,7 @@ export function StaleTicketsPanel({
     <article className="panel ops-panel">
       <header className="panel__header panel__header--row">
         <div>
-          <h2>Stale Tickets</h2>
-          <p>Open tickets with no updates</p>
+          <h2>Stale Tickets - Open tickets with no updates</h2>
         </div>
         <div className="ops-panel__count ops-panel__count--warn">{stale.length}</div>
       </header>
@@ -265,8 +264,7 @@ export function AgingTicketsPanel({
     <article className="panel ops-panel">
       <header className="panel__header panel__header--row">
         <div>
-          <h2>Aging Tickets</h2>
-          <p>Unresolved tickets by age since created</p>
+          <h2>Aging Tickets - Unresolved tickets by age since created</h2>
         </div>
         <div className="ops-panel__count ops-panel__count--critical">{aging.length}</div>
       </header>

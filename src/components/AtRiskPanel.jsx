@@ -35,9 +35,6 @@ export default function AtRiskPanel({ atRiskAccounts, onAccountDrilldown, onOpen
             <span className="alert-panel__count">{atRiskAccounts.length}</span>
           )}
         </div>
-        <p>
-          Click {atRiskAccounts.length} to drill down · sorted by highest risk first
-        </p>
       </header>
 
       <div className="alert-panel__scroll alert-panel__scroll--full">
