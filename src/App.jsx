@@ -572,16 +572,10 @@ function DashboardApp({ dataset }) {
     <div className="app">
       <header className="header">
         <div className="header__brand">
-          <div>
-            <AppTitle />
-            <p className="header__subtitle">
-              {tams.length} TAMs · {formatAccountCount(accounts.length)} · SMS, 10DLC, Conversation API
-            </p>
-          </div>
+          <AppTitle />
         </div>
         <div className="header__meta">
           <ThemeSwitcher />
-          <span className="badge badge--demo">{meta.source}</span>
           <span className="header__range">{periodLabel}</span>
         </div>
       </header>
