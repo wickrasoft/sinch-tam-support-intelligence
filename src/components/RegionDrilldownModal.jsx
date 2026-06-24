@@ -67,9 +67,8 @@ export default function RegionDrilldownModal({
                 className="region-drill-modal__swatch"
                 style={{ background: REGION_CHART_COLORS[region] }}
               />
-              {region} Region
+              {region} Region - Portfolio activity for TAMs in {region}
             </h2>
-            <p>Portfolio activity for TAMs in {region} · click stats or TAM names to drill down</p>
             <span className="kpi-drill__period">{periodLabel}</span>
           </div>
           <button type="button" className="kpi-drill__close" onClick={onClose} aria-label="Close">

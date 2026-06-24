@@ -64,8 +64,9 @@ export default function AccountHealthDrilldownModal({
       >
         <header className="kpi-drill__header">
           <div>
-            <h2 id="account-health-drill-title">{account.account_name}</h2>
-            <p>Account health breakdown for the selected period</p>
+            <h2 id="account-health-drill-title">
+              {account.account_name} - Account health breakdown for the selected period
+            </h2>
             <span className="kpi-drill__period">{periodLabel}</span>
             <span className="kpi-drill__scope">TAM: {account.tam_name}</span>
           </div>

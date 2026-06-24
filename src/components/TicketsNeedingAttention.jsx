@@ -21,8 +21,8 @@ export default function TicketsNeedingAttention({ tickets, onSelectTicket, onOpe
   return (
     <article className="panel alert-panel attention-panel">
       <header className="panel__header">
-        <div className="alert-panel__title-row">
-          <h2>Tickets Needing Attention</h2>
+        <h2 className="alert-panel__heading">
+          Tickets Needing Attention
           {onOpenDrilldown ? (
             <button
               type="button"
@@ -34,9 +34,9 @@ export default function TicketsNeedingAttention({ tickets, onSelectTicket, onOpe
               {tickets.length}
             </button>
           ) : (
-            <span className="alert-panel__count">{tickets.length}</span>
+            <span className="alert-panel__count alert-panel__count--attention">{tickets.length}</span>
           )}
-        </div>
+        </h2>
       </header>
 
       <div className="alert-panel__scroll alert-panel__scroll--full">

@@ -32,7 +32,9 @@ export default function RegionDistributionPanel({
     <Tag className={rootClass}>
       <header className={embedded ? 'region-panel__header--embedded' : 'panel__header'}>
         <h2 className={embedded ? 'region-panel__title--embedded' : undefined}>
-          Regional Distribution - Portfolio activity across US, EMEA, APAC, and LATAM
+          {embedded
+            ? 'Regional Distribution'
+            : 'Regional Distribution - Portfolio activity across US, EMEA, APAC, and LATAM'}
         </h2>
       </header>
 

@@ -84,7 +84,6 @@ export default function AttentionTicketsDrilldownModal({
               Tickets Needing Attention
               <span className="attention-drill-modal__count">{tickets.length}</span>
             </h2>
-            <p>P1/P2, SLA breach, escalated, WFR, temp resolution, reopened · click a stat or row for details</p>
             <span className="kpi-drill__period">{periodLabel}</span>
           </div>
           <button type="button" className="kpi-drill__close" onClick={onClose} aria-label="Close">

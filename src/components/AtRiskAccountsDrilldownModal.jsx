@@ -42,7 +42,6 @@ export default function AtRiskAccountsDrilldownModal({
               Accounts Requiring Attention
               <span className="at-risk-drill-modal__count">{atRiskAccounts.length}</span>
             </h2>
-            <p>All flagged accounts sorted by highest risk first · click a row for account health</p>
             <span className="kpi-drill__period">{periodLabel}</span>
           </div>
           <button type="button" className="kpi-drill__close" onClick={onClose} aria-label="Close">

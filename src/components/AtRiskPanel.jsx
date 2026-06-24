@@ -19,8 +19,8 @@ export default function AtRiskPanel({ atRiskAccounts, onAccountDrilldown, onOpen
   return (
     <article className="panel alert-panel at-risk-panel">
       <header className="panel__header">
-        <div className="alert-panel__title-row">
-          <h2>Accounts Requiring Attention</h2>
+        <h2 className="alert-panel__heading">
+          Accounts Requiring Attention
           {onOpenDrilldown ? (
             <button
               type="button"
@@ -34,7 +34,7 @@ export default function AtRiskPanel({ atRiskAccounts, onAccountDrilldown, onOpen
           ) : (
             <span className="alert-panel__count">{atRiskAccounts.length}</span>
           )}
-        </div>
+        </h2>
       </header>
 
       <div className="alert-panel__scroll alert-panel__scroll--full">

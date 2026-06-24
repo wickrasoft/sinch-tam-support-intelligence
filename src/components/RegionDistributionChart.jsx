@@ -19,7 +19,7 @@ function ChartTooltip({ active, payload }) {
       <strong>{row.region}</strong>
       <span>{row.value} activity ({pct}%)</span>
       <span>{row.tamCount} TAM{row.tamCount !== 1 ? 's' : ''}</span>
-      <span>{row.created} created · click to drill down</span>
+      <span>{row.created} created</span>
     </div>
   );
 }

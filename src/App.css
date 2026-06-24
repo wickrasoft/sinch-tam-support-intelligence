@@ -289,19 +289,21 @@ body {
 
 .kpi-drill__header h2 {
   font-size: 1.25rem;
-  margin-bottom: 0.25rem;
+  margin: 0 0 0.35rem;
+  line-height: 1.35;
 }
 
 .kpi-drill__header p {
   font-size: 0.85rem;
   color: var(--text-muted);
+  margin: 0 0 0.35rem;
 }
 
 .kpi-drill__period {
   font-size: 0.75rem;
   color: var(--accent);
   display: block;
-  margin-top: 0.35rem;
+  margin-top: 0;
 }
 
 .kpi-drill__scope {
@@ -888,6 +890,11 @@ body {
   font-size: 1.05rem;
 }
 
+.panel__header:has(> h2:only-child),
+.panel--chart-drilldown .panel__header {
+  margin-bottom: 0.75rem;
+}
+
 .panel__header p {
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -1295,9 +1302,14 @@ body {
 }
 
 .response-summary {
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
+.response-stat {
+  min-width: 0;
 }
 
 .response-stat__label {
@@ -1313,6 +1325,8 @@ body {
 }
 
 .response-stat--clickable {
+  width: 100%;
+  min-width: 0;
   text-align: left;
   background: transparent;
   border: 1px solid transparent;
@@ -1417,12 +1431,15 @@ body {
 }
 
 .reopen-highlight {
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
 }
 
 .reopen-highlight__stat--clickable {
+  width: 100%;
+  min-width: 0;
   text-align: left;
   background: transparent;
   border: 1px solid transparent;
@@ -1849,6 +1866,22 @@ body {
 .alert-panel__scroll--full {
   flex: 1;
   min-height: 0;
+}
+
+.alert-panel__heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.alert-panel__heading .alert-panel__count {
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .alert-panel__title-row {
@@ -4437,6 +4470,7 @@ body {
   }
 
   .panel__header > h2:only-child,
+  .alert-panel__heading,
   .alert-panel__title-row h2,
   .tam-overview-panel__title-row h2 {
     font-size: 0.95rem;
