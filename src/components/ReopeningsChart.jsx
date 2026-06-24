@@ -9,6 +9,8 @@ import {
 } from 'recharts';
 import { KPI_KEYS } from '../utils/kpiDrilldown';
 
+const BAR_SIZE = 20;
+
 function ReopenStat({ value, label, onDrilldown }) {
   return (
     <button
@@ -51,7 +53,7 @@ export default function ReopeningsChart({ timeSeries, summary, onDrilldown }) {
 
       <div className="panel__chart">
         <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="40%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="label" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
@@ -61,6 +63,7 @@ export default function ReopeningsChart({ timeSeries, summary, onDrilldown }) {
               fill="#be185d"
               name="Reopen Events"
               radius={[4, 4, 0, 0]}
+              barSize={BAR_SIZE}
             />
           </BarChart>
         </ResponsiveContainer>

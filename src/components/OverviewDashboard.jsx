@@ -91,7 +91,7 @@ export default function OverviewDashboard({
         />
       </section>
 
-      <section className="grid grid--2">
+      <section className="grid grid--2 grid--sla-region">
         <SlaBreachChart accountData={accountMetrics} timeSeries={timeSeries} onDrilldown={onDrilldown} />
         <RegionDistributionPanel
           regionChartTamMetrics={regionChartTamMetrics}

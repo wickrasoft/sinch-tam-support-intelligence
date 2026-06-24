@@ -23,12 +23,41 @@ const SLA_CHART = {
   surface: '#1e293b',
 };
 
-const TOP_ACCOUNT_LIMIT = 12;
-const BAR_ROW_HEIGHT = 24;
+const BAR_ROW_HEIGHT = 36;
+const VISIBLE_ACCOUNT_ROWS = 5;
+const CHART_VERTICAL_PADDING = 40;
 
-function formatAccountLabel(name, maxLen = 18) {
-  if (!name || name.length <= maxLen) return name;
-  return `${name.slice(0, maxLen - 1)}…`;
+function getScrollableChartHeights(rowCount, rowHeight = BAR_ROW_HEIGHT) {
+  const fullHeight = Math.max(
+    VISIBLE_ACCOUNT_ROWS * rowHeight + CHART_VERTICAL_PADDING,
+    rowCount * rowHeight + CHART_VERTICAL_PADDING,
+  );
+  const viewportHeight = Math.min(
+    fullHeight,
+    VISIBLE_ACCOUNT_ROWS * rowHeight + CHART_VERTICAL_PADDING,
+  );
+  return { fullHeight, viewportHeight };
+}
+
+function getYAxisWidth(names) {
+  const longest = names.reduce((max, name) => Math.max(max, name.length), 0);
+  return Math.min(220, Math.max(132, Math.ceil(longest * 6.5) + 16));
+}
+
+function AccountYAxisTick({ x, y, payload }) {
+  return (
+    <text
+      x={x}
+      y={y}
+      dy={4}
+      textAnchor="end"
+      fill="currentColor"
+      fontSize={12}
+      className="sla-breach-chart__y-tick"
+    >
+      {payload.value}
+    </text>
+  );
 }
 
 function getBarFill(breaches, maxBreaches) {
@@ -83,15 +112,19 @@ export default function SlaBreachChart({ accountData, timeSeries, onDrilldown, e
   const breachByAccount = useMemo(
     () => accountData
       .map((a) => ({
-        name: formatAccountLabel(a.account_name),
+        name: a.account_name,
         accountId: a.account_id,
         accountName: a.account_name,
         breaches: a.metrics.slaBreaches,
         rate: Number(a.metrics.slaBreachRate.toFixed(1)),
       }))
-      .sort((a, b) => b.breaches - a.breaches)
-      .slice(0, TOP_ACCOUNT_LIMIT),
+      .sort((a, b) => b.breaches - a.breaches),
     [accountData],
+  );
+
+  const yAxisWidth = useMemo(
+    () => getYAxisWidth(breachByAccount.map((row) => row.name)),
+    [breachByAccount],
   );
 
   const maxBreaches = useMemo(
@@ -109,9 +142,10 @@ export default function SlaBreachChart({ accountData, timeSeries, onDrilldown, e
     [timeSeries],
   );
 
-  const barHeight = embedded
-    ? 100
-    : Math.max(200, breachByAccount.length * BAR_ROW_HEIGHT + 40);
+  const { fullHeight: barHeight, viewportHeight } = getScrollableChartHeights(
+    breachByAccount.length,
+    embedded ? 22 : BAR_ROW_HEIGHT,
+  );
   const trendHeight = embedded ? 88 : 200;
 
   const openAccountDrilldown = (event) => {
@@ -143,13 +177,20 @@ export default function SlaBreachChart({ accountData, timeSeries, onDrilldown, e
         <h3 className="panel__chart-title sla-breach-panel__chart-title">
           <span className="sla-breach-panel__swatch" aria-hidden="true" />
           Breaches by Account
-          <span className="sla-breach-panel__chart-note">Top {TOP_ACCOUNT_LIMIT}</span>
+          <span className="sla-breach-panel__chart-note">
+            {breachByAccount.length} accounts
+            {breachByAccount.length > VISIBLE_ACCOUNT_ROWS ? ' · scroll for more' : ''}
+          </span>
         </h3>
-        <ResponsiveContainer width="100%" height={barHeight}>
+        <div
+          className="chart-scroll-viewport"
+          style={{ maxHeight: viewportHeight }}
+        >
+          <ResponsiveContainer width="100%" height={barHeight}>
           <BarChart
             data={breachByAccount}
             layout="vertical"
-            margin={{ top: 4, right: 20, left: 4, bottom: 4 }}
+            margin={{ top: 8, right: 20, left: 8, bottom: 8 }}
             barCategoryGap="28%"
           >
             <CartesianGrid strokeDasharray="3 3" stroke={SLA_CHART.grid} horizontal={false} />
@@ -163,8 +204,9 @@ export default function SlaBreachChart({ accountData, timeSeries, onDrilldown, e
             <YAxis
               type="category"
               dataKey="name"
-              tick={axisTick}
-              width={118}
+              tick={AccountYAxisTick}
+              width={yAxisWidth}
+              interval={0}
               axisLine={false}
               tickLine={false}
             />
@@ -186,6 +228,7 @@ export default function SlaBreachChart({ accountData, timeSeries, onDrilldown, e
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+        </div>
       </div>
 
       <div className={`panel__chart sla-breach-panel__chart sla-breach-panel__chart--trend ${embedded ? 'panel__chart--compact' : ''}`}>

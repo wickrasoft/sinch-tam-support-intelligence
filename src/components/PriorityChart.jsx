@@ -24,6 +24,12 @@ const DISPOSITION_GROUPS = [
   { name: 'Temp fix', disposition: 'temp_resolution' },
 ];
 
+const GROUPED_BAR_SIZE = 14;
+const STACKED_BAR_SIZE = 16;
+const HORIZONTAL_BAR_SIZE = 12;
+const BAR_CATEGORY_GAP = '32%';
+const BAR_GAP = 3;
+
 export default function PriorityChart({ data, accountData, tamMetrics, tickets, summary, onDrilldown }) {
   const topAccounts = accountData.slice(0, 6).map((a) => ({
     name: a.account_name.split(' ')[0],
@@ -179,7 +185,12 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
       <div className="panel__chart panel__chart--compact">
         <h3 className="panel__chart-title">By Account (Top 6)</h3>
         <ResponsiveContainer width="100%" height={190}>
-          <BarChart data={topAccounts} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <BarChart
+            data={topAccounts}
+            margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+            barCategoryGap={BAR_CATEGORY_GAP}
+            barGap={BAR_GAP}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
@@ -193,6 +204,7 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
               fill="#dc2626"
               name="P1 Critical"
               radius={[4, 4, 0, 0]}
+              barSize={GROUPED_BAR_SIZE}
               cursor={onDrilldown ? 'pointer' : 'default'}
               onClick={(event) => openAccountDrilldown('P1', event)}
             />
@@ -201,6 +213,7 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
               fill="#f97316"
               name="P2 High"
               radius={[4, 4, 0, 0]}
+              barSize={GROUPED_BAR_SIZE}
               cursor={onDrilldown ? 'pointer' : 'default'}
               onClick={(event) => openAccountDrilldown('P2', event)}
             />
@@ -211,7 +224,11 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
       <div className="panel__chart panel__chart--compact">
         <h3 className="panel__chart-title">Trend Over Time</h3>
         <ResponsiveContainer width="100%" height={170}>
-          <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <BarChart
+            data={data}
+            margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+            barCategoryGap={BAR_CATEGORY_GAP}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="label" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
@@ -222,6 +239,7 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
               fill="#dc2626"
               name="P1"
               stackId="a"
+              barSize={STACKED_BAR_SIZE}
               cursor={onDrilldown ? 'pointer' : 'default'}
               onClick={(event) => openTrendDrilldown('P1', event)}
             />
@@ -230,6 +248,7 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
               fill="#f97316"
               name="P2"
               stackId="a"
+              barSize={STACKED_BAR_SIZE}
               cursor={onDrilldown ? 'pointer' : 'default'}
               onClick={(event) => openTrendDrilldown('P2', event)}
             />
@@ -241,7 +260,12 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
         <div className="panel__chart panel__chart--compact">
           <h3 className="panel__chart-title">By TAM (Top 6)</h3>
           <ResponsiveContainer width="100%" height={170}>
-            <BarChart data={topTams} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <BarChart
+              data={topTams}
+              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+              barCategoryGap={BAR_CATEGORY_GAP}
+              barGap={BAR_GAP}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="name" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
@@ -255,6 +279,7 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
                 fill="#dc2626"
                 name="P1 Critical"
                 radius={[4, 4, 0, 0]}
+                barSize={GROUPED_BAR_SIZE}
                 cursor={onDrilldown ? 'pointer' : 'default'}
                 onClick={(event) => openTamDrilldown('P1', event)}
               />
@@ -263,6 +288,7 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
                 fill="#f97316"
                 name="P2 High"
                 radius={[4, 4, 0, 0]}
+                barSize={GROUPED_BAR_SIZE}
                 cursor={onDrilldown ? 'pointer' : 'default'}
                 onClick={(event) => openTamDrilldown('P2', event)}
               />
@@ -274,11 +300,12 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
       {dispositionBreakdown.length > 0 && (
         <div className="panel__chart panel__chart--compact">
           <h3 className="panel__chart-title">By Disposition</h3>
-          <ResponsiveContainer width="100%" height={Math.max(140, dispositionBreakdown.length * 36 + 40)}>
+          <ResponsiveContainer width="100%" height={Math.max(130, dispositionBreakdown.length * 30 + 36)}>
             <BarChart
               data={dispositionBreakdown}
               layout="vertical"
               margin={{ top: 4, right: 16, left: 4, bottom: 0 }}
+              barCategoryGap="35%"
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
@@ -291,6 +318,7 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
                 name="P1 Critical"
                 stackId="disp"
                 radius={[0, 0, 0, 0]}
+                barSize={HORIZONTAL_BAR_SIZE}
                 cursor={onDrilldown ? 'pointer' : 'default'}
                 onClick={(event) => openDispositionDrilldown('P1', event)}
               />
@@ -300,6 +328,7 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
                 name="P2 High"
                 stackId="disp"
                 radius={[0, 4, 4, 0]}
+                barSize={HORIZONTAL_BAR_SIZE}
                 cursor={onDrilldown ? 'pointer' : 'default'}
                 onClick={(event) => openDispositionDrilldown('P2', event)}
               />
