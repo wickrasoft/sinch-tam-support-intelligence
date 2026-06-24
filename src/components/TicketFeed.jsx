@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { formatDuration, getTicketMttaMinutes, getTicketMttrMinutes } from '../utils/metrics';
+import { formatDurationHours, getTicketMttaMinutes, getTicketMttrMinutes } from '../utils/metrics';
 import { format, parseISO } from 'date-fns';
 
 const PAGE_SIZE = 25;
@@ -156,8 +156,8 @@ export default function TicketFeed({ tickets, total, onOpenTicket }) {
                     </td>
                     <td>{t.csat.score ?? '—'}</td>
                     <td>{t.reopen_count > 0 ? t.reopen_count : '—'}</td>
-                    <td>{formatDuration(getTicketMttaMinutes(t))}</td>
-                    <td>{formatDuration(getTicketMttrMinutes(t))}</td>
+                    <td>{formatDurationHours(getTicketMttaMinutes(t))}</td>
+                    <td>{formatDurationHours(getTicketMttrMinutes(t))}</td>
                   </tr>
                 ))}
               </tbody>

@@ -5,6 +5,7 @@ import AtRiskPanel from './AtRiskPanel';
 import AccountHealthChart from './AccountHealthChart';
 import PriorityChart from './PriorityChart';
 import SlaBreachChart from './SlaBreachChart';
+import RegionDistributionPanel from './RegionDistributionPanel';
 import CsatsSection from './CsatsSection';
 import ResponseTimeChart from './ResponseTimeChart';
 import ReopeningsChart from './ReopeningsChart';
@@ -13,6 +14,7 @@ import TamOverview from './TamOverview';
 export default function OverviewDashboard({
   summary,
   comparison,
+  filteredTickets,
   onDrilldown,
   tams,
   allTickets,
@@ -27,15 +29,20 @@ export default function OverviewDashboard({
   onViewAllStale,
   onViewAllAging,
   attentionTickets,
-  onViewAttentionTickets,
+  onOpenAttentionDrilldown,
   atRiskAccounts,
   onSelectAccount,
+  onAccountHealthDrilldown,
+  onOpenAtRiskDrilldown,
   accountMetrics,
   ratedTickets,
   periodLabel,
   timeSeries,
   tamMetrics,
+  regionChartTamMetrics,
   onFilterTam,
+  selectedRegion,
+  onRegionDrilldown,
 }) {
   return (
     <>
@@ -59,36 +66,51 @@ export default function OverviewDashboard({
       <section className="grid grid--alert">
         <TicketsNeedingAttention
           tickets={attentionTickets}
-          onViewAll={onViewAttentionTickets}
           onSelectTicket={onOpenTicket}
+          onOpenDrilldown={onOpenAttentionDrilldown}
         />
         <AtRiskPanel
           atRiskAccounts={atRiskAccounts}
-          onSelectAccount={onSelectAccount}
+          onAccountDrilldown={onAccountHealthDrilldown}
+          onOpenDrilldown={onOpenAtRiskDrilldown}
         />
       </section>
 
       <section className="grid grid--2">
         <AccountHealthChart
           accountMetrics={accountMetrics}
-          onSelectAccount={onSelectAccount}
+          onAccountDrilldown={onAccountHealthDrilldown}
         />
-        <PriorityChart data={timeSeries} accountData={accountMetrics} />
-      </section>
-
-      <section className="grid grid--2">
-        <SlaBreachChart accountData={accountMetrics} timeSeries={timeSeries} />
-        <CsatsSection
+        <PriorityChart
+          data={timeSeries}
+          accountData={accountMetrics}
+          tamMetrics={tamMetrics}
+          tickets={filteredTickets}
           summary={summary}
-          ratedTickets={ratedTickets}
-          periodLabel={periodLabel}
           onDrilldown={onDrilldown}
-          onOpenTicket={onOpenTicket}
         />
       </section>
 
       <section className="grid grid--2">
-        <ResponseTimeChart timeSeries={timeSeries} summary={summary} />
+        <SlaBreachChart accountData={accountMetrics} timeSeries={timeSeries} onDrilldown={onDrilldown} />
+        <RegionDistributionPanel
+          regionChartTamMetrics={regionChartTamMetrics}
+          allTams={tams}
+          selectedRegion={selectedRegion}
+          onRegionDrilldown={onRegionDrilldown}
+        />
+      </section>
+
+      <CsatsSection
+        summary={summary}
+        ratedTickets={ratedTickets}
+        periodLabel={periodLabel}
+        onDrilldown={onDrilldown}
+        onOpenTicket={onOpenTicket}
+      />
+
+      <section className="grid grid--2">
+        <ResponseTimeChart timeSeries={timeSeries} summary={summary} onDrilldown={onDrilldown} />
         <ReopeningsChart
           timeSeries={timeSeries}
           summary={summary}
@@ -99,7 +121,9 @@ export default function OverviewDashboard({
       <TamOverview
         tamMetrics={tamMetrics}
         allTams={tams}
-        onSelectAccount={onSelectAccount}
+        referenceDate={referenceDate}
+        selectedRegion={selectedRegion}
+        onSelectAccount={onAccountHealthDrilldown}
         onFilterTam={onFilterTam}
         onDrilldown={onDrilldown}
       />

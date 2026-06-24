@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import TamStatusIcon from './TamStatusIcon';
-import { formatDuration, csatIndicator } from '../utils/metrics';
+import { formatDurationHours, csatIndicator } from '../utils/metrics';
 import { computeHealthScore, healthIndicator } from '../utils/health';
 import { getTamAvailabilityStatus, normalizeTamRegion } from '../utils/tamStatus';
 import { resolveTamAvailability } from '../utils/tamAvailability';
@@ -64,7 +64,7 @@ export default function TamDirectory({ tams, tamMetrics, referenceDate, onFilter
                   {status !== 'online' && <TamStatusIcon status={status} />}
                 </span>
                 <span className="tam-directory__item-meta">
-                  {tam.accounts?.length ?? 0} accts · {tam.metrics.totalTickets} tix
+                  {tam.accounts?.length ?? 0} account{(tam.accounts?.length ?? 0) !== 1 ? 's' : ''} · {tam.metrics.totalTickets} tix
                 </span>
                 <span className="tam-directory__item-health" style={{ color: hi.color }}>
                   {h ?? '—'}
@@ -121,11 +121,11 @@ export default function TamDirectory({ tams, tamMetrics, referenceDate, onFilter
             <span className="tam-summary-stat__label">CSAT</span>
           </div>
           <div className="tam-summary-stat">
-            <span className="tam-summary-stat__value">{formatDuration(selectedTam.metrics.avgMtta)}</span>
+            <span className="tam-summary-stat__value">{formatDurationHours(selectedTam.metrics.avgMtta)}</span>
             <span className="tam-summary-stat__label">MTTA</span>
           </div>
           <div className="tam-summary-stat">
-            <span className="tam-summary-stat__value">{formatDuration(selectedTam.metrics.avgMttr)}</span>
+            <span className="tam-summary-stat__value">{formatDurationHours(selectedTam.metrics.avgMttr)}</span>
             <span className="tam-summary-stat__label">MTTR</span>
           </div>
           <div className="tam-summary-stat">

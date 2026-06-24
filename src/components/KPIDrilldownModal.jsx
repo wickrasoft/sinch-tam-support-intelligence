@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
-import { formatDuration, countTicketReopenEventsInPeriod, csatIndicator, computeSummary, filterTickets, getTicketMttaMinutes, getTicketMttrMinutes } from '../utils/metrics';
-import { formatDelta, buildComparisonSummary } from '../utils/health';
+import { formatDurationHours, countTicketReopenEventsInPeriod, csatIndicator, computeSummary, filterTickets, getPreviousPeriodDate, getTicketMttaMinutes, getTicketMttrMinutes } from '../utils/metrics';
+import { formatDelta, formatDurationDelta, buildComparisonSummary } from '../utils/health';
 import {
   KPI_CONFIG,
   getTicketsForKpi,
@@ -12,12 +12,15 @@ import {
   KPI_KEYS,
 } from '../utils/kpiDrilldown';
 import CsatFeedbackList from './CsatFeedbackList';
+import DrilldownFooter from './DrilldownFooter';
 
 function ComparisonRows({ rows }) {
   return (
     <div className="kpi-drill__comparison">
       {rows.map((row) => {
-        const deltaFmt = row.delta ? formatDelta(row.delta) : null;
+        const deltaFmt = row.delta
+          ? (row.deltaInHours ? formatDurationDelta(row.delta) : formatDelta(row.delta))
+          : null;
         return (
           <div key={row.label} className="kpi-drill__comp-row">
             <span className="kpi-drill__comp-label">{row.label}</span>
@@ -90,8 +93,8 @@ function TicketMiniTable({ tickets, kpiKey, onOpenTicket, filters }) {
                 </>
               )}
               <td className="data-table__subject" title={t.subject}>{t.subject}</td>
-              {kpiKey === KPI_KEYS.MTTA && <td>{formatDuration(getTicketMttaMinutes(t))}</td>}
-              {kpiKey === KPI_KEYS.MTTR && <td>{formatDuration(getTicketMttrMinutes(t))}</td>}
+              {kpiKey === KPI_KEYS.MTTA && <td>{formatDurationHours(getTicketMttaMinutes(t))}</td>}
+              {kpiKey === KPI_KEYS.MTTR && <td>{formatDurationHours(getTicketMttrMinutes(t))}</td>}
               {kpiKey === KPI_KEYS.REOPENINGS && (
                 <>
                   <td>{t.reopen_count > 0 ? t.reopen_count : '—'}</td>
@@ -148,8 +151,8 @@ function AccountBreakdownTable({ breakdown, kpiKey }) {
               <td className="data-table__account">{row.account_name}</td>
               <td>{row.tam_name}</td>
               <td>{row.count}</td>
-              {kpiKey === KPI_KEYS.MTTA && <td>{formatDuration(row.avgMttaVal)}</td>}
-              {kpiKey === KPI_KEYS.MTTR && <td>{formatDuration(row.avgMttrVal)}</td>}
+              {kpiKey === KPI_KEYS.MTTA && <td>{formatDurationHours(row.avgMttaVal)}</td>}
+              {kpiKey === KPI_KEYS.MTTR && <td>{formatDurationHours(row.avgMttrVal)}</td>}
               {(kpiKey === KPI_KEYS.CSAT || kpiKey === KPI_KEYS.CSAT_RESPONSE) && (
                 <td>{row.avgCsat?.toFixed(1) ?? '—'}</td>
               )}
@@ -176,7 +179,10 @@ export default function KPIDrilldownModal({
   periodLabel,
   onClose,
   onViewAll,
+  onFilterPortfolio,
+  onViewAccount,
   onOpenTicket,
+  accounts = [],
 }) {
   useEffect(() => {
     if (!kpiKey) return undefined;
@@ -185,41 +191,61 @@ export default function KPIDrilldownModal({
     return () => window.removeEventListener('keydown', onKey);
   }, [kpiKey, onClose]);
 
-  const effectiveFilters = useMemo(
-    () => (drilldownContext?.tamId ? { ...filters, tamId: drilldownContext.tamId } : filters),
-    [filters, drilldownContext],
+  const effectiveFilters = useMemo(() => {
+    const next = { ...filters };
+    if (drilldownContext?.tamId) next.tamId = drilldownContext.tamId;
+    if (drilldownContext?.accountId) next.accountId = drilldownContext.accountId;
+    if (drilldownContext?.bucketDate) next.referenceDate = drilldownContext.bucketDate;
+    return next;
+  }, [filters, drilldownContext]);
+
+  const hasScopedContext = Boolean(
+    drilldownContext?.tamId || drilldownContext?.accountId || drilldownContext?.bucketDate,
   );
 
   const scopedSummary = useMemo(() => {
-    if (!drilldownContext?.tamId) return summary;
-    const scopedTickets = filterTickets(allTickets, effectiveFilters);
-    return computeSummary(scopedTickets, allTickets, effectiveFilters);
-  }, [drilldownContext, summary, allTickets, effectiveFilters]);
+    if (!hasScopedContext) return summary;
+    const scopedTicketSet = filterTickets(allTickets, effectiveFilters, { tams });
+    return computeSummary(scopedTicketSet, allTickets, effectiveFilters);
+  }, [hasScopedContext, summary, allTickets, effectiveFilters, tams]);
 
   const scopedPreviousSummary = useMemo(() => {
-    if (!drilldownContext?.tamId || !previousFilters) return previousSummary;
-    const prevFilters = { ...previousFilters, tamId: drilldownContext.tamId };
-    const scopedTickets = filterTickets(allTickets, prevFilters);
-    return computeSummary(scopedTickets, allTickets, prevFilters);
-  }, [drilldownContext, previousSummary, allTickets, previousFilters]);
+    if (!hasScopedContext || !previousFilters) return previousSummary;
+    const prevFilters = { ...effectiveFilters };
+    prevFilters.referenceDate = getPreviousPeriodDate(
+      effectiveFilters.referenceDate,
+      effectiveFilters.period,
+    ).toISOString();
+    const scopedTicketSet = filterTickets(allTickets, prevFilters, { tams });
+    return computeSummary(scopedTicketSet, allTickets, prevFilters);
+  }, [hasScopedContext, previousSummary, allTickets, previousFilters, effectiveFilters, tams]);
 
   const scopedComparison = useMemo(() => {
-    if (!drilldownContext?.tamId) return comparison;
+    if (!hasScopedContext) return comparison;
     return buildComparisonSummary(scopedSummary, scopedPreviousSummary);
-  }, [drilldownContext, comparison, scopedSummary, scopedPreviousSummary]);
+  }, [hasScopedContext, comparison, scopedSummary, scopedPreviousSummary]);
 
   const scopedTickets = useMemo(() => {
-    if (drilldownContext?.tamId) {
-      return tickets.filter((t) => t.tam_id === drilldownContext.tamId);
+    if (hasScopedContext) {
+      return filterTickets(allTickets, effectiveFilters, { tams });
     }
     return tickets;
-  }, [tickets, drilldownContext]);
+  }, [hasScopedContext, allTickets, effectiveFilters, tams, tickets]);
+
+  const kpiTickets = useMemo(() => {
+    if (!kpiKey) return [];
+    const context = { allTickets, filters: effectiveFilters };
+    let list = getTicketsForKpi(scopedTickets, kpiKey, context);
+    if (drilldownContext?.disposition) {
+      list = list.filter((t) => t.disposition === drilldownContext.disposition);
+    }
+    return list;
+  }, [kpiKey, scopedTickets, allTickets, effectiveFilters, drilldownContext?.disposition]);
 
   if (!kpiKey) return null;
 
   const config = KPI_CONFIG[kpiKey];
   const context = { allTickets, filters: effectiveFilters };
-  const kpiTickets = getTicketsForKpi(scopedTickets, kpiKey, context);
   const breakdown = getAccountBreakdown(kpiTickets, kpiKey, effectiveFilters);
   const compRows = formatKpiComparison(
     kpiKey,
@@ -230,6 +256,20 @@ export default function KPIDrilldownModal({
   const tamName = drilldownContext?.tamId
     ? tams.find((t) => t.id === drilldownContext.tamId)?.name
     : null;
+  const accountName = drilldownContext?.accountId
+    ? accounts.find((a) => a.id === drilldownContext.accountId)?.name
+    : null;
+  const dispositionScope = drilldownContext?.disposition
+    ? {
+        in_progress: 'Open',
+        waiting_for_response: 'WFR',
+        escalated: 'Escalated',
+        temp_resolution: 'Temp Resolution',
+        closed: 'Closed',
+      }[drilldownContext.disposition] ?? drilldownContext.disposition
+    : null;
+  const displayPeriod = drilldownContext?.bucketLabel ?? periodLabel;
+  const hasPortfolioScope = Boolean(drilldownContext?.tamId || drilldownContext?.accountId);
 
   return (
     <div className="kpi-drill-overlay" onClick={onClose} role="presentation">
@@ -243,9 +283,15 @@ export default function KPIDrilldownModal({
           <div>
             <h2 id="kpi-drill-title">{config.title}</h2>
             <p>{config.description}</p>
-            <span className="kpi-drill__period">{periodLabel}</span>
+            <span className="kpi-drill__period">{displayPeriod}</span>
             {tamName && (
               <span className="kpi-drill__scope">TAM: {tamName}</span>
+            )}
+            {accountName && (
+              <span className="kpi-drill__scope">Account: {accountName}</span>
+            )}
+            {dispositionScope && (
+              <span className="kpi-drill__scope">Status: {dispositionScope}</span>
             )}
           </div>
           <button type="button" className="kpi-drill__close" onClick={onClose} aria-label="Close">×</button>
@@ -333,12 +379,20 @@ export default function KPIDrilldownModal({
           </section>
         </div>
 
-        <footer className="kpi-drill__footer">
-          <button type="button" className="panel__action" onClick={() => onViewAll(kpiKey)}>
-            View all {kpiTickets.length} tickets →
-          </button>
-          <button type="button" className="kpi-drill__close-btn" onClick={onClose}>Close</button>
-        </footer>
+        <DrilldownFooter
+          onClose={onClose}
+          onFilterPortfolio={
+            hasPortfolioScope && onFilterPortfolio
+              ? () => onFilterPortfolio(drilldownContext)
+              : undefined
+          }
+          onViewAccount={
+            drilldownContext?.accountId && onViewAccount
+              ? () => onViewAccount(drilldownContext.accountId)
+              : undefined
+          }
+          onViewTickets={() => onViewAll(kpiKey)}
+        />
       </div>
     </div>
   );

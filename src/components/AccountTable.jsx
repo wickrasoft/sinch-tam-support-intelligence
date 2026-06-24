@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { formatDuration } from '../utils/metrics';
+import { formatDurationHours } from '../utils/metrics';
 import { computeHealthScore, healthIndicator } from '../utils/health';
 import { format, parseISO } from 'date-fns';
 
 const SORT_KEYS = {
   account: 'account_name',
   health: 'healthScore',
+  risk: 'riskScore',
   tickets: 'totalTickets',
   p1: 'p1Count',
   sla: 'slaBreachRate',
@@ -24,19 +25,30 @@ function SortHeader({ label, sortKey, sort, onSort }) {
   );
 }
 
-export default function AccountTable({ accountMetrics, onSelectAccount, selectedAccountId }) {
-  const [sort, setSort] = useState({ key: 'health', dir: 'asc' });
+export default function AccountTable({
+  accountMetrics,
+  onSelectAccount,
+  selectedAccountId,
+  atRiskOnly = false,
+}) {
+  const [sort, setSort] = useState(() => (
+    atRiskOnly ? { key: 'risk', dir: 'desc' } : { key: 'health', dir: 'asc' }
+  ));
 
   const rows = useMemo(() => {
     const enriched = accountMetrics.map((row) => ({
       ...row,
-      healthScore: computeHealthScore(row.metrics),
+      healthScore: row.healthScore ?? computeHealthScore(row.metrics),
     }));
 
     const metricKey = SORT_KEYS[sort.key];
     return enriched.sort((a, b) => {
-      let aVal = sort.key === 'account' ? a.account_name : (metricKey ? a.metrics[metricKey] ?? a[metricKey] : 0);
-      let bVal = sort.key === 'account' ? b.account_name : (metricKey ? b.metrics[metricKey] ?? b[metricKey] : 0);
+      let aVal = sort.key === 'account'
+        ? a.account_name
+        : (metricKey ? a.metrics[metricKey] ?? a[metricKey] : 0);
+      let bVal = sort.key === 'account'
+        ? b.account_name
+        : (metricKey ? b.metrics[metricKey] ?? b[metricKey] : 0);
 
       if (aVal == null) aVal = sort.key === 'csat' ? -1 : 0;
       if (bVal == null) bVal = sort.key === 'csat' ? -1 : 0;
@@ -59,7 +71,7 @@ export default function AccountTable({ accountMetrics, onSelectAccount, selected
     return (
       <article className="panel panel--wide">
         <header className="panel__header">
-          <h2>Account Detail Matrix</h2>
+          <h2>{atRiskOnly ? 'At-Risk Account Matrix' : 'Account Detail Matrix'}</h2>
           <p>No accounts match the current filters</p>
         </header>
         <div className="empty-state">Try widening the date range or clearing filters.</div>
@@ -70,8 +82,12 @@ export default function AccountTable({ accountMetrics, onSelectAccount, selected
   return (
     <article className="panel panel--wide">
       <header className="panel__header">
-        <h2>Account Detail Matrix</h2>
-        <p>Click a row to drill down · Sort by column header</p>
+        <h2>{atRiskOnly ? 'At-Risk Account Matrix' : 'Account Detail Matrix'}</h2>
+        <p>
+          {atRiskOnly
+            ? 'Flagged accounts sorted by highest risk · click a row for account health'
+            : 'Click a row to drill down · Sort by column header'}
+        </p>
       </header>
 
       <div className="table-wrap">
@@ -80,6 +96,9 @@ export default function AccountTable({ accountMetrics, onSelectAccount, selected
             <tr>
               <SortHeader label="Account" sortKey="account" sort={sort} onSort={toggleSort} />
               <th>TAM</th>
+              {atRiskOnly && (
+                <SortHeader label="Risk" sortKey="risk" sort={sort} onSort={toggleSort} />
+              )}
               <SortHeader label="Health" sortKey="health" sort={sort} onSort={toggleSort} />
               <SortHeader label="Tickets" sortKey="tickets" sort={sort} onSort={toggleSort} />
               <SortHeader label="P1" sortKey="p1" sort={sort} onSort={toggleSort} />
@@ -104,6 +123,9 @@ export default function AccountTable({ accountMetrics, onSelectAccount, selected
                 >
                   <td className="data-table__account">{row.account_name}</td>
                   <td>{row.tam_name}</td>
+                  {atRiskOnly && (
+                    <td className="cell-critical">{row.riskScore ?? '—'}</td>
+                  )}
                   <td>
                     <span className="health-pill" style={{ '--pill-color': health.color }}>
                       {row.healthScore ?? '—'}
@@ -115,8 +137,8 @@ export default function AccountTable({ accountMetrics, onSelectAccount, selected
                   <td>{row.metrics.slaBreaches}</td>
                   <td>{row.metrics.slaBreachRate.toFixed(1)}%</td>
                   <td>{row.metrics.avgCsat?.toFixed(1) ?? '—'}</td>
-                  <td>{formatDuration(row.metrics.avgMtta)}</td>
-                  <td>{formatDuration(row.metrics.avgMttr)}</td>
+                  <td>{formatDurationHours(row.metrics.avgMtta)}</td>
+                  <td>{formatDurationHours(row.metrics.avgMttr)}</td>
                   <td>{row.metrics.reopenings}</td>
                 </tr>
               );

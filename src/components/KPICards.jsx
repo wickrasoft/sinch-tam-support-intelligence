@@ -1,10 +1,12 @@
-import { formatDuration, csatIndicator } from '../utils/metrics';
-import { formatDelta } from '../utils/health';
+import { formatDurationHours, csatIndicator } from '../utils/metrics';
+import { formatDelta, formatDurationDelta } from '../utils/health';
 import { KPI_KEYS } from '../utils/kpiDrilldown';
 
-function DeltaBadge({ delta }) {
+function DeltaBadge({ delta, deltaInHours = false }) {
   if (!delta) return null;
-  const { text, className } = formatDelta(delta);
+  const { text, className } = deltaInHours
+    ? formatDurationDelta(delta)
+    : formatDelta(delta);
   if (text === '—') return null;
 
   return (
@@ -16,8 +18,20 @@ function DeltaBadge({ delta }) {
 
 export default function KPICards({ summary, comparison, onDrilldown }) {
   const csat = csatIndicator(summary.avgCsat, summary.csatPct);
+  const escalatedCount = summary.dispositionCounts?.escalated ?? 0;
+  const resolvedPct = summary.totalTickets
+    ? Math.round((summary.resolvedCount / summary.totalTickets) * 100)
+    : 0;
 
   const cards = [
+    {
+      key: KPI_KEYS.CREATED,
+      title: 'Tickets Created',
+      value: summary.totalTickets,
+      sub: 'New tickets in period',
+      accent: 'neutral',
+      delta: comparison?.totalTickets,
+    },
     {
       key: KPI_KEYS.P1,
       title: 'P1 Tickets',
@@ -30,9 +44,25 @@ export default function KPICards({ summary, comparison, onDrilldown }) {
       key: KPI_KEYS.P2,
       title: 'P2 Tickets',
       value: summary.p2Count,
-      sub: `${summary.totalTickets} tickets in period`,
+      sub: 'High priority in period',
       accent: 'high',
       delta: comparison?.p2Count,
+    },
+    {
+      key: KPI_KEYS.NEEDS_ATTENTION,
+      title: 'Needs Attention',
+      value: summary.needsAttention,
+      sub: 'Flagged for TAM review',
+      accent: summary.needsAttention > 0 ? 'warn' : 'good',
+      delta: comparison?.needsAttention,
+    },
+    {
+      key: KPI_KEYS.PORTFOLIO_ESC,
+      title: 'Escalated',
+      value: escalatedCount,
+      sub: 'Active escalations in period',
+      accent: escalatedCount > 0 ? 'critical' : 'neutral',
+      delta: comparison?.escalated,
     },
     {
       key: KPI_KEYS.SLA,
@@ -41,6 +71,14 @@ export default function KPICards({ summary, comparison, onDrilldown }) {
       sub: `${summary.slaBreachRate.toFixed(1)}% breach rate · FR: ${summary.firstResponseBreaches} / Res: ${summary.resolutionBreaches}`,
       accent: summary.slaBreachRate > 15 ? 'critical' : 'warn',
       delta: comparison?.slaBreaches,
+    },
+    {
+      key: KPI_KEYS.RESOLVED,
+      title: 'Resolved',
+      value: summary.resolvedCount,
+      sub: `${resolvedPct}% of created resolved in period`,
+      accent: 'good',
+      delta: comparison?.resolvedCount,
     },
     {
       key: KPI_KEYS.CSAT,
@@ -54,16 +92,16 @@ export default function KPICards({ summary, comparison, onDrilldown }) {
     {
       key: KPI_KEYS.MTTA,
       title: 'MTTA',
-      value: formatDuration(summary.avgMtta),
-      sub: 'Mean time to acknowledge',
+      value: formatDurationHours(summary.avgMtta),
+      sub: 'Mean time to acknowledge (hours)',
       accent: 'neutral',
       delta: comparison?.avgMtta,
     },
     {
       key: KPI_KEYS.MTTR,
       title: 'MTTR',
-      value: formatDuration(summary.avgMttr),
-      sub: 'Mean time to resolve',
+      value: formatDurationHours(summary.avgMttr),
+      sub: 'Mean time to resolve (hours)',
       accent: 'neutral',
       delta: comparison?.avgMttr,
     },
@@ -98,7 +136,12 @@ export default function KPICards({ summary, comparison, onDrilldown }) {
           <span className="kpi-card__title">{card.title}</span>
           <span className="kpi-card__value">{card.value}</span>
           <span className="kpi-card__sub">{card.sub}</span>
-          {card.delta && <DeltaBadge delta={card.delta} />}
+          {card.delta && (
+            <DeltaBadge
+              delta={card.delta}
+              deltaInHours={card.key === KPI_KEYS.MTTA || card.key === KPI_KEYS.MTTR}
+            />
+          )}
           <span className="kpi-card__hint">Click for details</span>
         </button>
       ))}

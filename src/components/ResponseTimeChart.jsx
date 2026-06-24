@@ -8,7 +8,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { formatDuration } from '../utils/metrics';
+import { formatDurationHours } from '../utils/metrics';
+import { KPI_KEYS } from '../utils/kpiDrilldown';
 
 function MinutesTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
@@ -17,7 +18,7 @@ function MinutesTooltip({ active, payload, label }) {
       <p className="chart-tooltip__label">{label}</p>
       {payload.map((p) => (
         <p key={p.dataKey} style={{ color: p.color }}>
-          {p.name}: {formatDuration(p.value)}
+          {p.name}: {formatDurationHours(p.value)}
         </p>
       ))}
     </div>
@@ -29,7 +30,7 @@ const SERIES = [
   { key: 'MTTR', label: 'MTTR', color: '#0d9488' },
 ];
 
-export default function ResponseTimeChart({ timeSeries, summary }) {
+export default function ResponseTimeChart({ timeSeries, summary, onDrilldown }) {
   const [visible, setVisible] = useState({ MTTA: true, MTTR: true });
 
   const toggle = (key) => {
@@ -42,15 +43,25 @@ export default function ResponseTimeChart({ timeSeries, summary }) {
 
   const data = timeSeries.map((p) => ({
     label: p.label,
+    date: p.date,
     MTTA: Math.round(p.avgMtta ?? 0),
     MTTR: Math.round(p.avgMttr ?? 0),
   }));
 
+  const openDrilldown = (kpiKey, bucket) => {
+    if (!onDrilldown) return;
+    if (bucket?.date) {
+      onDrilldown(kpiKey, { bucketDate: bucket.date, bucketLabel: bucket.label });
+      return;
+    }
+    onDrilldown(kpiKey);
+  };
+
   return (
-    <article className="panel">
+    <article className="panel panel--chart-drilldown">
       <header className="panel__header">
         <h2>MTTA & MTTR</h2>
-        <p>Click legend toggles to show/hide series</p>
+        <p>Response and resolution times · click stats or chart points to drill down</p>
       </header>
 
       <div className="series-toggles">
@@ -71,16 +82,24 @@ export default function ResponseTimeChart({ timeSeries, summary }) {
 
       <div className="response-summary">
         {visible.MTTA && (
-          <div className="response-stat">
+          <button
+            type="button"
+            className="response-stat response-stat--clickable"
+            onClick={() => openDrilldown(KPI_KEYS.MTTA)}
+          >
             <span className="response-stat__label">Current MTTA</span>
-            <span className="response-stat__value">{formatDuration(summary.avgMtta)}</span>
-          </div>
+            <span className="response-stat__value">{formatDurationHours(summary.avgMtta)}</span>
+          </button>
         )}
         {visible.MTTR && (
-          <div className="response-stat">
+          <button
+            type="button"
+            className="response-stat response-stat--clickable"
+            onClick={() => openDrilldown(KPI_KEYS.MTTR)}
+          >
             <span className="response-stat__label">Current MTTR</span>
-            <span className="response-stat__value">{formatDuration(summary.avgMttr)}</span>
-          </div>
+            <span className="response-stat__value">{formatDurationHours(summary.avgMttr)}</span>
+          </button>
         )}
       </div>
 
@@ -89,13 +108,37 @@ export default function ResponseTimeChart({ timeSeries, summary }) {
           <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-            <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(v) => formatDuration(v)} />
+            <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(v) => formatDurationHours(v)} />
             <Tooltip content={<MinutesTooltip />} />
             {visible.MTTA && (
-              <Line type="monotone" dataKey="MTTA" name="MTTA" stroke="#0284c7" strokeWidth={2} dot={{ r: 3 }} />
+              <Line
+                type="monotone"
+                dataKey="MTTA"
+                name="MTTA"
+                stroke="#0284c7"
+                strokeWidth={2}
+                dot={{ r: 3, cursor: onDrilldown ? 'pointer' : 'default' }}
+                activeDot={{
+                  r: 5,
+                  cursor: onDrilldown ? 'pointer' : 'default',
+                  onClick: (_, index) => openDrilldown(KPI_KEYS.MTTA, data[index]),
+                }}
+              />
             )}
             {visible.MTTR && (
-              <Line type="monotone" dataKey="MTTR" name="MTTR" stroke="#0d9488" strokeWidth={2} dot={{ r: 3 }} />
+              <Line
+                type="monotone"
+                dataKey="MTTR"
+                name="MTTR"
+                stroke="#0d9488"
+                strokeWidth={2}
+                dot={{ r: 3, cursor: onDrilldown ? 'pointer' : 'default' }}
+                activeDot={{
+                  r: 5,
+                  cursor: onDrilldown ? 'pointer' : 'default',
+                  onClick: (_, index) => openDrilldown(KPI_KEYS.MTTR, data[index]),
+                }}
+              />
             )}
           </LineChart>
         </ResponsiveContainer>

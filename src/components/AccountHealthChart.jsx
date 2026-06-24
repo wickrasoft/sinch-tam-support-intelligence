@@ -9,7 +9,7 @@ import {
   Cell,
 } from 'recharts';
 
-export default function AccountHealthChart({ accountMetrics, onSelectAccount }) {
+export default function AccountHealthChart({ accountMetrics, onAccountDrilldown }) {
   const data = [...accountMetrics]
     .sort((a, b) => (a.healthScore ?? 0) - (b.healthScore ?? 0))
     .map((a) => ({
@@ -20,10 +20,10 @@ export default function AccountHealthChart({ accountMetrics, onSelectAccount }) 
     }));
 
   return (
-    <article className="panel">
+    <article className="panel panel--chart-drilldown">
       <header className="panel__header">
         <h2>Account Health Score</h2>
-        <p>Composite score (0–100) based on SLA compliance, CSAT, reopenings, and P1/P2 volume</p>
+        <p>Composite score (0–100) based on SLA compliance, CSAT, reopenings, and P1/P2 volume · click bars to drill down</p>
       </header>
 
       <div className="panel__chart">
@@ -41,7 +41,7 @@ export default function AccountHealthChart({ accountMetrics, onSelectAccount }) 
               name="Health Score"
               radius={[0, 4, 4, 0]}
               cursor="pointer"
-              onClick={(entry) => onSelectAccount?.(entry?.payload?.id)}
+              onClick={(entry) => onAccountDrilldown?.(entry?.payload?.id ?? entry?.id)}
             >
               {data.map((entry) => (
                 <Cell key={entry.id} fill={entry.color} />

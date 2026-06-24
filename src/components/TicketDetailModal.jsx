@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
-import { formatDuration, getTicketMttaMinutes, getTicketMttrMinutes } from '../utils/metrics';
+import { formatDuration, formatDurationHours, getTicketMttaMinutes, getTicketMttrMinutes } from '../utils/metrics';
 import { getZendeskTicketUrl } from '../utils/zendesk';
 import { FIELD_OPTIONS } from '../utils/zendeskFieldOptions';
 import { useHorizontalResize, PaneResizeHandle, usePaneLayoutStorage } from '../hooks/usePaneResize';
@@ -176,7 +176,13 @@ function AppRail({ activeApp, onSelectApp }) {
   );
 }
 
-export default function TicketDetailModal({ ticket, onClose }) {
+export default function TicketDetailModal({
+  ticket,
+  onClose,
+  onFilterPortfolio,
+  onViewAccount,
+  onViewTickets,
+}) {
   const conversationRef = useRef(null);
   usePaneLayoutStorage();
 
@@ -248,6 +254,21 @@ export default function TicketDetailModal({ ticket, onClose }) {
             <a href={zendeskUrl} target="_blank" rel="noopener noreferrer" className="zd-btn zd-btn--link">
               Open in new tab ↗
             </a>
+            {onFilterPortfolio && (
+              <button type="button" className="zd-btn zd-btn--secondary" onClick={() => onFilterPortfolio(ticket)}>
+                Filter portfolio →
+              </button>
+            )}
+            {onViewAccount && (
+              <button type="button" className="zd-btn zd-btn--secondary" onClick={() => onViewAccount(ticket)}>
+                View account →
+              </button>
+            )}
+            {onViewTickets && (
+              <button type="button" className="zd-btn zd-btn--secondary" onClick={() => onViewTickets(ticket)}>
+                View tickets →
+              </button>
+            )}
             <button type="button" className="zd-btn zd-btn--secondary" onClick={onClose}>Close</button>
           </div>
         </div>
@@ -327,8 +348,8 @@ export default function TicketDetailModal({ ticket, onClose }) {
                 <summary>Sinch technical fields</summary>
                 <ZdInput label="Project ID" value={sinch.project_id} mono />
                 <ZdInput label="Service plan" value={sinch.service_plan_id} mono />
-                <ZdInput label="MTTA (reply time)" value={formatDuration(getTicketMttaMinutes(ticket))} />
-                <ZdInput label="MTTR (full resolution)" value={formatDuration(getTicketMttrMinutes(ticket))} />
+                <ZdInput label="MTTA (reply time)" value={formatDurationHours(getTicketMttaMinutes(ticket))} />
+                <ZdInput label="MTTR (full resolution)" value={formatDurationHours(getTicketMttrMinutes(ticket))} />
                 {ticket.zendesk?.metrics?.reply_time_in_minutes && (
                   <ZdInput
                     label="Reply time (business hrs)"

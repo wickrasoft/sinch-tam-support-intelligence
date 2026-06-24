@@ -17,6 +17,7 @@ import {
   subYears,
   differenceInMinutes,
 } from 'date-fns';
+import { normalizeTamRegion } from './tamAvailability';
 
 export const PERIOD_OPTIONS = [
   { value: 'day', label: 'Daily' },
@@ -62,9 +63,13 @@ export function getPreviousPeriodDate(referenceDate, period) {
   }
 }
 
-export function filterTickets(tickets, filters) {
-  const { tamId, accountId, priority, disposition, referenceDate, period, slaBreachOnly } = filters;
+export function filterTickets(tickets, filters, options = {}) {
+  const { tamId, accountId, priority, disposition, referenceDate, period, slaBreachOnly, region } = filters;
   const { start, end } = getPeriodBounds(referenceDate, period);
+  const { tams = [] } = options;
+  const tamRegionById = new Map(
+    tams.map((tam) => [tam.id, normalizeTamRegion(tam.region)]),
+  );
 
   return tickets.filter((ticket) => {
     if (tamId && ticket.tam_id !== tamId) return false;
@@ -72,6 +77,7 @@ export function filterTickets(tickets, filters) {
     if (priority && ticket.priority !== priority) return false;
     if (disposition && ticket.disposition !== disposition) return false;
     if (slaBreachOnly && !ticket.sla.any_breach) return false;
+    if (region && tamRegionById.get(ticket.tam_id) !== region) return false;
 
     const created = parseISO(ticket.created_at);
     return isWithinInterval(created, { start, end });
@@ -300,27 +306,27 @@ export function groupCsatByAccount(ratedTickets) {
 export function getPortfolioActivityBreakdown(metrics) {
   const dc = metrics.dispositionCounts ?? {};
   return {
-    created: metrics.totalTickets ?? 0,
-    other: metrics.otherHandledCount ?? 0,
     p1p2: metrics.p1p2Count ?? 0,
+    p3p5: metrics.p3p5Count ?? 0,
+    created: metrics.totalTickets ?? 0,
+    ip: dc.in_progress ?? 0,
+    esc: dc.escalated ?? 0,
+    wfr: dc.waiting_for_response ?? 0,
     resolved: metrics.resolvedCount ?? 0,
     closed: metrics.closedInPeriodCount ?? 0,
-    ip: dc.in_progress ?? 0,
-    wfr: dc.waiting_for_response ?? 0,
-    esc: dc.escalated ?? 0,
   };
 }
 
 export function sumPortfolioActivityBreakdown(breakdown) {
   return (
-    breakdown.created
-    + breakdown.other
-    + breakdown.p1p2
+    breakdown.p1p2
+    + breakdown.p3p5
+    + breakdown.created
+    + breakdown.ip
+    + breakdown.esc
+    + breakdown.wfr
     + breakdown.resolved
     + breakdown.closed
-    + breakdown.ip
-    + breakdown.wfr
-    + breakdown.esc
   );
 }
 
@@ -331,6 +337,10 @@ export function getPortfolioActivityTotal(metrics) {
 export function computeSummary(tickets, allTickets, filters) {
   const p1Count = tickets.filter((t) => t.priority === 'P1').length;
   const p2Count = tickets.filter((t) => t.priority === 'P2').length;
+  const p3Count = tickets.filter((t) => t.priority === 'P3').length;
+  const p4Count = tickets.filter((t) => t.priority === 'P4').length;
+  const p5Count = tickets.filter((t) => t.priority === 'P5').length;
+  const p3p5Count = p3Count + p4Count + p5Count;
   const slaBreaches = tickets.filter((t) => t.sla.any_breach).length;
   const firstResponseBreaches = tickets.filter((t) => t.sla.first_response_breached).length;
   const resolutionBreaches = tickets.filter((t) => t.sla.resolution_breached).length;
@@ -372,8 +382,8 @@ export function computeSummary(tickets, allTickets, filters) {
 
   const activityBreakdown = getPortfolioActivityBreakdown({
     totalTickets: tickets.length,
-    otherHandledCount,
     p1p2Count: p1Count + p2Count,
+    p3p5Count,
     resolvedCount,
     closedInPeriodCount,
     dispositionCounts,
@@ -385,6 +395,10 @@ export function computeSummary(tickets, allTickets, filters) {
     p1Count,
     p2Count,
     p1p2Count: p1Count + p2Count,
+    p3Count,
+    p4Count,
+    p5Count,
+    p3p5Count,
     slaBreaches,
     firstResponseBreaches,
     resolutionBreaches,
@@ -483,16 +497,18 @@ export function groupByTam(tickets, allTickets, filters, allAccounts = [], allTa
   }).sort((a, b) => b.metrics.activityTotal - a.metrics.activityTotal);
 }
 
-export function getTicketsNeedingAttention(tickets, limit = 50) {
-  return tickets
+export function getTicketsNeedingAttention(tickets, limit) {
+  const sorted = tickets
     .filter((t) => t.needs_attention)
     .sort((a, b) => {
       const pri = { P1: 0, P2: 1, P3: 2, P4: 3 };
       const pd = (pri[a.priority] ?? 9) - (pri[b.priority] ?? 9);
       if (pd !== 0) return pd;
       return new Date(b.created_at) - new Date(a.created_at);
-    })
-    .slice(0, limit);
+    });
+
+  if (typeof limit === 'number') return sorted.slice(0, limit);
+  return sorted;
 }
 
 export function buildTimeSeries(allTickets, filters, bucketCount = 12) {
@@ -559,6 +575,15 @@ export function formatDuration(minutes) {
   if (minutes < 60) return `${Math.round(minutes)}m`;
   if (minutes < 1440) return `${(minutes / 60).toFixed(1)}h`;
   return `${(minutes / 1440).toFixed(1)}d`;
+}
+
+/** MTTA / MTTR display — always shown in hours. */
+export function formatDurationHours(minutes) {
+  if (minutes == null || Number.isNaN(minutes)) return '—';
+  const hours = minutes / 60;
+  if (hours < 10) return `${hours.toFixed(1)} hr`;
+  if (hours < 100) return `${hours.toFixed(1)} hr`;
+  return `${Math.round(hours)} hr`;
 }
 
 export function csatIndicator(score, pct) {

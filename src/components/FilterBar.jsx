@@ -17,6 +17,7 @@ export default function FilterBar({ filters, onChange, tams, accounts }) {
   };
 
   const activeChips = [
+    filters.region && { key: 'region', label: `Region: ${filters.region}` },
     filters.tamId && { key: 'tamId', label: tams.find((t) => t.id === filters.tamId)?.name },
     filters.accountId && { key: 'accountId', label: accounts.find((a) => a.id === filters.accountId)?.name },
     filters.priority && { key: 'priority', label: filters.priority },
@@ -134,6 +135,7 @@ export default function FilterBar({ filters, onChange, tams, accounts }) {
               accountId: '',
               priority: '',
               disposition: '',
+              region: '',
               slaBreachOnly: false,
               period: 'month',
               referenceDate: '2026-06-22',

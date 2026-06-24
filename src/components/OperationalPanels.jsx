@@ -316,7 +316,6 @@ export default function OperationalPanels({
 }) {
   return (
     <section className="grid grid--ops">
-      <TamAvailabilityPanel tams={props.tams} referenceDate={props.referenceDate} />
       <StaleTicketsPanel
         {...props}
         staleThresholdId={staleThresholdId}
