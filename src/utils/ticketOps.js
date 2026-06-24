@@ -1,6 +1,6 @@
 import { differenceInHours, differenceInDays, parseISO } from 'date-fns';
 import { getTamAvailabilityStatus } from './tamStatus';
-import { resolveTamAvailability } from './tamAvailability';
+import { resolveTamAvailability, normalizeTamRegion } from './tamAvailability';
 
 export const STALE_THRESHOLDS = [
   { id: '48h', label: '48 hours', shortLabel: '48h', hours: 48, default: true },
@@ -70,7 +70,7 @@ export function isOpenTicket(ticket) {
   return ticket.disposition !== 'closed' && ticket.disposition !== 'temp_resolution';
 }
 
-export function getOperationalScope(tickets, accounts, filters = {}) {
+export function getOperationalScope(tickets, accounts, filters = {}, tams = []) {
   let scoped = tickets.filter(isOpenTicket);
 
   if (filters.accountId) {
@@ -80,6 +80,13 @@ export function getOperationalScope(tickets, accounts, filters = {}) {
       accounts.filter((a) => a.tam_id === filters.tamId).map((a) => a.id),
     );
     scoped = scoped.filter((t) => accountIds.has(t.account_id));
+  } else if (filters.region && tams.length) {
+    const tamIds = new Set(
+      tams
+        .filter((tam) => normalizeTamRegion(tam.region) === filters.region)
+        .map((tam) => tam.id),
+    );
+    scoped = scoped.filter((t) => tamIds.has(t.tam_id));
   }
 
   if (filters.priority) {

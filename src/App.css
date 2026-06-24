@@ -4571,12 +4571,32 @@ body {
 }
 
 /* Stale / aging threshold chips (no dropdown) */
+.ops-panel__filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
 .ops-threshold-chips {
   display: grid;
   gap: 0.35rem;
   margin: 0 0 0.75rem;
   width: 100%;
   justify-content: start;
+}
+
+.ops-threshold-chips--region {
+  grid-template-columns: repeat(5, minmax(2.65rem, 1fr));
+  margin-bottom: 0;
+}
+
+.ops-threshold-chips--region .stale-threshold-chip {
+  max-width: none;
+}
+
+.ops-panel__filters .ops-threshold-chips {
+  margin-bottom: 0;
 }
 
 .ops-threshold-chips--stale {
@@ -4621,6 +4641,14 @@ body {
   width: 100%;
   min-width: 0;
   grid-template-columns: repeat(auto-fill, minmax(2.5rem, 3rem));
+}
+
+.filter-banner .ops-threshold-chips--region {
+  grid-template-columns: repeat(5, minmax(2.4rem, 1fr));
+}
+
+.filter-banner .ops-threshold-chips--region .stale-threshold-chip {
+  max-width: none;
 }
 
 .filter-banner .stale-threshold-chip {

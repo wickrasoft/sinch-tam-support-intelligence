@@ -16,7 +16,7 @@ import AccountHealthDrilldownModal from './components/AccountHealthDrilldownModa
 import AtRiskAccountsDrilldownModal from './components/AtRiskAccountsDrilldownModal';
 import AttentionTicketsDrilldownModal from './components/AttentionTicketsDrilldownModal';
 import RegionDrilldownModal from './components/RegionDrilldownModal';
-import { StaleThresholdChips, AgingThresholdChips } from './components/OperationalPanels';
+import { StaleThresholdChips, AgingThresholdChips, RegionFilterChips } from './components/OperationalPanels';
 import {
   filterTickets,
   computeSummary,
@@ -101,8 +101,8 @@ function DashboardApp({ dataset }) {
   );
 
   const operationalTickets = useMemo(
-    () => getOperationalScope(allTickets, accounts, filters),
-    [allTickets, accounts, filters],
+    () => getOperationalScope(allTickets, accounts, filters, tams),
+    [allTickets, accounts, filters, tams],
   );
 
   const previousTickets = useMemo(
@@ -388,6 +388,15 @@ function DashboardApp({ dataset }) {
     setActiveTab('tickets');
   }, []);
 
+  const handleRegionFilterChange = useCallback((region) => {
+    setFilters((prev) => ({
+      ...prev,
+      region,
+      tamId: '',
+      accountId: '',
+    }));
+  }, []);
+
   const handleKpiDrilldown = useCallback((kpiKey, context = null) => {
     setActiveKpiDrilldown(kpiKey);
     setDrilldownContext(context);
@@ -645,6 +654,7 @@ function DashboardApp({ dataset }) {
             onOpenTicket={openTicket}
             onViewAllStale={handleViewStaleTickets}
             onViewAllAging={handleViewAgingTickets}
+            onRegionChange={handleRegionFilterChange}
             attentionTickets={attentionTickets}
             onOpenAttentionDrilldown={handleOpenAttentionDrilldown}
             atRiskAccounts={atRiskAccounts}
@@ -777,10 +787,21 @@ function DashboardApp({ dataset }) {
                     {ticketKpiFilter && KPI_CONFIG[ticketKpiFilter]?.title}
                     {attentionOnly && 'Showing tickets needing attention only'}
                     {operationalFilter === 'stale' && (
-                      <>Stale open tickets — no update in {getStaleThresholdLabel(staleThresholdId).toLowerCase()}</>
+                      <>
+                        Stale open tickets
+                        {filters.region ? ` in ${filters.region}` : ''}
+                        {' — no update in '}
+                        {getStaleThresholdLabel(staleThresholdId).toLowerCase()}
+                      </>
                     )}
                     {operationalFilter === 'aging' && (
-                      <>Aging open tickets — {getAgingThresholdLabel(agingThresholdId).toLowerCase()}+</>
+                      <>
+                        Aging open tickets
+                        {filters.region ? ` in ${filters.region}` : ''}
+                        {' — '}
+                        {getAgingThresholdLabel(agingThresholdId).toLowerCase()}
+                        +
+                      </>
                     )}
                     {operationalFilter === 'at-risk-attention' && (
                       <>Tickets needing attention from {atRiskAccounts.length} at-risk {accountWord(atRiskAccounts.length)}</>
@@ -794,6 +815,12 @@ function DashboardApp({ dataset }) {
                   </span>
                 </div>
                 <div className="filter-banner__actions">
+                  {(operationalFilter === 'stale' || operationalFilter === 'aging') && (
+                    <RegionFilterChips
+                      value={filters.region ?? ''}
+                      onChange={handleRegionFilterChange}
+                    />
+                  )}
                   {operationalFilter === 'stale' && (
                     <StaleThresholdChips
                       value={staleThresholdId}

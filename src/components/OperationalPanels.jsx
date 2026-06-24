@@ -21,6 +21,7 @@ import {
   daysSinceCreated,
   formatStaleDuration,
 } from '../utils/ticketOps';
+import { TAM_REGIONS } from '../utils/regionMetrics';
 
 function ThresholdChips({ thresholds, value, onChange, ariaLabel, variant }) {
   return (
@@ -62,6 +63,43 @@ export function AgingThresholdChips(props) {
       variant="aging"
       {...props}
     />
+  );
+}
+
+export function RegionFilterChips({ value = '', onChange }) {
+  return (
+    <div
+      className="ops-threshold-chips ops-threshold-chips--region"
+      role="group"
+      aria-label="Region filter"
+    >
+      <button
+        type="button"
+        className={`stale-threshold-chip ${!value ? 'stale-threshold-chip--active' : ''}`}
+        onClick={() => onChange?.('')}
+      >
+        All
+      </button>
+      {TAM_REGIONS.map((region) => (
+        <button
+          key={region}
+          type="button"
+          className={`stale-threshold-chip ${value === region ? 'stale-threshold-chip--active' : ''}`}
+          onClick={() => onChange?.(region)}
+        >
+          {region}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function OpsPanelFilters({ region, onRegionChange, children }) {
+  return (
+    <div className="ops-panel__filters">
+      <RegionFilterChips value={region ?? ''} onChange={onRegionChange} />
+      {children}
+    </div>
   );
 }
 
@@ -195,16 +233,19 @@ function AgingTicketRow({ ticket, referenceDate, onOpenTicket }) {
 export function StaleTicketsPanel({
   tickets,
   accounts,
+  tams,
   filters,
   referenceDate,
   staleThresholdId,
   onStaleThresholdChange,
+  onRegionChange,
   onOpenTicket,
   onViewAllStale,
 }) {
-  const scoped = getOperationalScope(tickets, accounts, filters);
+  const scoped = getOperationalScope(tickets, accounts, filters, tams);
   const threshold = getStaleThreshold(staleThresholdId);
   const stale = getStaleTicketsByThreshold(scoped, referenceDate, staleThresholdId);
+  const regionLabel = filters.region ? ` in ${filters.region}` : '';
 
   return (
     <article className="panel ops-panel">
@@ -215,14 +256,16 @@ export function StaleTicketsPanel({
         </div>
       </header>
 
-      <StaleThresholdChips
-        value={staleThresholdId}
-        onChange={onStaleThresholdChange}
-      />
+      <OpsPanelFilters region={filters.region} onRegionChange={onRegionChange}>
+        <StaleThresholdChips
+          value={staleThresholdId}
+          onChange={onStaleThresholdChange}
+        />
+      </OpsPanelFilters>
 
       {stale.length === 0 ? (
         <p className="ops-panel__empty ops-panel__empty--good">
-          No stale open tickets for {threshold.label.toLowerCase()} in scope
+          No stale open tickets for {threshold.label.toLowerCase()}{regionLabel} in scope
         </p>
       ) : (
         <>
@@ -242,7 +285,7 @@ export function StaleTicketsPanel({
               className="panel__action ops-panel__more"
               onClick={() => onViewAllStale(staleThresholdId)}
             >
-              View all {stale.length} stale tickets ({threshold.shortLabel})
+              View all {stale.length} stale tickets ({threshold.shortLabel}{filters.region ? ` · ${filters.region}` : ''})
             </button>
           )}
         </>
@@ -254,16 +297,19 @@ export function StaleTicketsPanel({
 export function AgingTicketsPanel({
   tickets,
   accounts,
+  tams,
   filters,
   referenceDate,
   agingThresholdId,
   onAgingThresholdChange,
+  onRegionChange,
   onOpenTicket,
   onViewAllAging,
 }) {
-  const scoped = getOperationalScope(tickets, accounts, filters);
+  const scoped = getOperationalScope(tickets, accounts, filters, tams);
   const threshold = getAgingThreshold(agingThresholdId);
   const aging = getAgingTicketsByThreshold(scoped, referenceDate, agingThresholdId);
+  const regionLabel = filters.region ? ` in ${filters.region}` : '';
 
   return (
     <article className="panel ops-panel">
@@ -274,14 +320,16 @@ export function AgingTicketsPanel({
         </div>
       </header>
 
-      <AgingThresholdChips
-        value={agingThresholdId}
-        onChange={onAgingThresholdChange}
-      />
+      <OpsPanelFilters region={filters.region} onRegionChange={onRegionChange}>
+        <AgingThresholdChips
+          value={agingThresholdId}
+          onChange={onAgingThresholdChange}
+        />
+      </OpsPanelFilters>
 
       {aging.length === 0 ? (
         <p className="ops-panel__empty ops-panel__empty--good">
-          No aging open tickets for {threshold.label.toLowerCase()} in scope
+          No aging open tickets for {threshold.label.toLowerCase()}{regionLabel} in scope
         </p>
       ) : (
         <>
@@ -301,7 +349,7 @@ export function AgingTicketsPanel({
               className="panel__action ops-panel__more"
               onClick={() => onViewAllAging(agingThresholdId)}
             >
-              View all {aging.length} aging tickets ({threshold.shortLabel})
+              View all {aging.length} aging tickets ({threshold.shortLabel}{filters.region ? ` · ${filters.region}` : ''})
             </button>
           )}
         </>
@@ -315,6 +363,7 @@ export default function OperationalPanels({
   onStaleThresholdChange,
   agingThresholdId,
   onAgingThresholdChange,
+  onRegionChange,
   ...props
 }) {
   return (
@@ -323,11 +372,13 @@ export default function OperationalPanels({
         {...props}
         staleThresholdId={staleThresholdId}
         onStaleThresholdChange={onStaleThresholdChange}
+        onRegionChange={onRegionChange}
       />
       <AgingTicketsPanel
         {...props}
         agingThresholdId={agingThresholdId}
         onAgingThresholdChange={onAgingThresholdChange}
+        onRegionChange={onRegionChange}
       />
     </section>
   );

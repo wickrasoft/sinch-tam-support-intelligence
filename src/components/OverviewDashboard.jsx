@@ -28,6 +28,7 @@ export default function OverviewDashboard({
   onOpenTicket,
   onViewAllStale,
   onViewAllAging,
+  onRegionChange,
   attentionTickets,
   onOpenAttentionDrilldown,
   atRiskAccounts,
@@ -61,6 +62,7 @@ export default function OverviewDashboard({
         onOpenTicket={onOpenTicket}
         onViewAllStale={onViewAllStale}
         onViewAllAging={onViewAllAging}
+        onRegionChange={onRegionChange}
       />
 
       <section className="grid grid--alert">
