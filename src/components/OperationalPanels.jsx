@@ -227,7 +227,7 @@ export function StaleTicketsPanel({
       ) : (
         <>
           <div className="ops-ticket-list">
-            {stale.slice(0, 6).map((t) => (
+            {stale.map((t) => (
               <StaleTicketRow
                 key={t.id}
                 ticket={t}
@@ -286,7 +286,7 @@ export function AgingTicketsPanel({
       ) : (
         <>
           <div className="ops-ticket-list">
-            {aging.slice(0, 6).map((t) => (
+            {aging.map((t) => (
               <AgingTicketRow
                 key={t.id}
                 ticket={t}

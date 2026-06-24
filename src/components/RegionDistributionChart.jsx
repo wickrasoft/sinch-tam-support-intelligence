@@ -35,8 +35,8 @@ export default function RegionDistributionChart({
     () => data.map((row) => ({ ...row, __total: total })),
     [data, total],
   );
-  const innerRadius = Math.round(height * 0.25);
-  const outerRadius = Math.round(height * 0.405);
+  const innerRadius = Math.round(height * 0.24);
+  const outerRadius = Math.round(height * 0.42);
   const centerSize = innerRadius * 2;
 
   const handleSliceClick = (region) => {

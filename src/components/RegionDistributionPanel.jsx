@@ -42,7 +42,7 @@ export default function RegionDistributionPanel({
             data={regionDistribution}
             selectedRegion={selectedRegion}
             onRegionClick={onRegionDrilldown}
-            height={embedded ? 132 : 320}
+            height={embedded ? 132 : 360}
           />
         </div>
 
@@ -68,6 +68,7 @@ export default function RegionDistributionPanel({
                   <span className="tam-region-legend__meta">
                     {row.tamCount} TAM{row.tamCount !== 1 ? 's' : ''}
                   </span>
+                  <span className="tam-region-legend__connector" aria-hidden="true" />
                   <span className="tam-region-legend__value">{row.value}</span>
                   <span className="tam-region-legend__pct">{pct}%</span>
                 </button>

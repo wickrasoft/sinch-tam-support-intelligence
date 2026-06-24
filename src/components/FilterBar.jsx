@@ -1,4 +1,6 @@
 import { tamStatusSuffix } from '../utils/tamStatus';
+import { normalizeTamRegion } from '../utils/tamAvailability';
+import { TAM_REGIONS } from '../utils/regionMetrics';
 import { TICKET_STATUS_OPTIONS, getTicketStatusLabel } from '../utils/ticketOps';
 
 export default function FilterBar({ filters, onChange, tams, accounts }) {
@@ -6,12 +8,25 @@ export default function FilterBar({ filters, onChange, tams, accounts }) {
     ? new Date(`${filters.referenceDate}T12:00:00`)
     : new Date();
 
-  const filteredAccounts = filters.tamId
-    ? accounts.filter((a) => a.tam_id === filters.tamId)
-    : accounts;
+  const filteredTams = filters.region
+    ? tams.filter((tam) => normalizeTamRegion(tam.region) === filters.region)
+    : tams;
+
+  const filteredAccounts = accounts.filter((account) => {
+    if (filters.tamId && account.tam_id !== filters.tamId) return false;
+    if (filters.region) {
+      const tam = tams.find((t) => t.id === account.tam_id);
+      if (!tam || normalizeTamRegion(tam.region) !== filters.region) return false;
+    }
+    return true;
+  });
 
   const update = (key, value) => {
     const next = { ...filters, [key]: value };
+    if (key === 'region') {
+      next.tamId = '';
+      next.accountId = '';
+    }
     if (key === 'tamId') next.accountId = '';
     onChange(next);
   };
@@ -59,6 +74,20 @@ export default function FilterBar({ filters, onChange, tams, accounts }) {
         </div>
 
         <div className="filter-bar__group">
+          <label htmlFor="region">Region</label>
+          <select
+            id="region"
+            value={filters.region ?? ''}
+            onChange={(e) => update('region', e.target.value)}
+          >
+            <option value="">All Regions</option>
+            {TAM_REGIONS.map((region) => (
+              <option key={region} value={region}>{region}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-bar__group">
           <label htmlFor="tam">TAM</label>
           <select
             id="tam"
@@ -66,7 +95,7 @@ export default function FilterBar({ filters, onChange, tams, accounts }) {
             onChange={(e) => update('tamId', e.target.value)}
           >
             <option value="">All TAMs</option>
-            {tams.map((t) => (
+            {filteredTams.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}{tamStatusSuffix(t, true, referenceAt)}
               </option>
