@@ -22,8 +22,7 @@ export default function AccountHealthChart({ accountMetrics, onAccountDrilldown 
   return (
     <article className="panel panel--chart-drilldown">
       <header className="panel__header">
-        <h2>Account Health Score</h2>
-        <p>Composite score (0–100) based on SLA compliance, CSAT, reopenings, and P1/P2 volume · click bars to drill down</p>
+        <h2>Account Health Score - Composite score (0–100) from SLA, CSAT, reopenings, and P1/P2 volume</h2>
       </header>
 
       <div className="panel__chart">

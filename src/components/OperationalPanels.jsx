@@ -143,13 +143,12 @@ export function TamAvailabilityPanel({ tams, referenceDate }) {
 
   return (
     <article className="panel ops-panel">
-      <header className="panel__header panel__header--row">
-        <div>
-          <h2>TAM Availability</h2>
-          <p>Live status by region — APAC, EMEA, LATAM, US</p>
-        </div>
-        <div className="ops-panel__count ops-panel__count--good">
-          {onlineCount}/{sorted.length}
+      <header className="panel__header">
+        <div className="ops-panel__title-row">
+          <h2>TAM Availability - Live status by region — APAC, EMEA, LATAM, US</h2>
+          <div className="ops-panel__count ops-panel__count--good">
+            {onlineCount}/{sorted.length}
+          </div>
         </div>
       </header>
       <div className="tam-availability-list">
@@ -203,11 +202,11 @@ export function StaleTicketsPanel({
 
   return (
     <article className="panel ops-panel">
-      <header className="panel__header panel__header--row">
-        <div>
+      <header className="panel__header">
+        <div className="ops-panel__title-row">
           <h2>Stale Tickets - Open tickets with no updates</h2>
+          <div className="ops-panel__count ops-panel__count--warn">{stale.length}</div>
         </div>
-        <div className="ops-panel__count ops-panel__count--warn">{stale.length}</div>
       </header>
 
       <StaleThresholdChips
@@ -262,11 +261,11 @@ export function AgingTicketsPanel({
 
   return (
     <article className="panel ops-panel">
-      <header className="panel__header panel__header--row">
-        <div>
+      <header className="panel__header">
+        <div className="ops-panel__title-row">
           <h2>Aging Tickets - Unresolved tickets by age since created</h2>
+          <div className="ops-panel__count ops-panel__count--critical">{aging.length}</div>
         </div>
-        <div className="ops-panel__count ops-panel__count--critical">{aging.length}</div>
       </header>
 
       <AgingThresholdChips

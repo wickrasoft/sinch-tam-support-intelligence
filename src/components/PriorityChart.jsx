@@ -131,8 +131,7 @@ export default function PriorityChart({ data, accountData, tamMetrics, tickets, 
   return (
     <article className="panel panel--chart-drilldown priority-chart-panel">
       <header className="panel__header">
-        <h2>P1 / P2 Tickets</h2>
-        <p>Critical & high priority volume · click stats or bars to drill down</p>
+        <h2>P1 / P2 Tickets - Critical &amp; high priority volume</h2>
       </header>
 
       {summary && (

@@ -82,12 +82,11 @@ export default function AccountTable({
   return (
     <article className="panel panel--wide">
       <header className="panel__header">
-        <h2>{atRiskOnly ? 'At-Risk Account Matrix' : 'Account Detail Matrix'}</h2>
-        <p>
+        <h2>
           {atRiskOnly
-            ? 'Flagged accounts sorted by highest risk · click a row for account health'
-            : 'Click a row to drill down · Sort by column header'}
-        </p>
+            ? 'At-Risk Account Matrix - Flagged accounts sorted by highest risk'
+            : 'Account Detail Matrix'}
+        </h2>
       </header>
 
       <div className="table-wrap">

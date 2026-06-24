@@ -473,26 +473,23 @@ export default function TamOverview({
 
   return (
     <article className="panel tam-overview-panel">
-      <header className="panel__header panel__header--row">
-        <div>
-          <h2>TAM Portfolio & Availability</h2>
-          <p className="tam-overview-panel__lede">
-            Live status and portfolio metrics for the selected period.
-          </p>
-          <PortfolioSummaryBar
-            breakdown={portfolioBreakdown}
-            total={portfolioTotal}
-            portfolioCsat={portfolioCsat}
-            portfolioCsatStyle={portfolioCsatStyle}
-            onDrilldown={onDrilldown}
-          />
+      <header className="panel__header">
+        <div className="ops-panel__title-row tam-overview-panel__title-row">
+          <h2>TAM Portfolio &amp; Availability - Live status and portfolio metrics for the selected period</h2>
+          <div className="tam-overview-online" title="TAMs currently online">
+            <span className="tam-overview-online__label">Online</span>
+            <span className="ops-panel__count ops-panel__count--good">
+              {onlineCount}/{allTams.length}
+            </span>
+          </div>
         </div>
-        <div className="tam-overview-online" title="TAMs currently online">
-          <span className="tam-overview-online__label">Online</span>
-          <span className="ops-panel__count ops-panel__count--good">
-            {onlineCount}/{allTams.length}
-          </span>
-        </div>
+        <PortfolioSummaryBar
+          breakdown={portfolioBreakdown}
+          total={portfolioTotal}
+          portfolioCsat={portfolioCsat}
+          portfolioCsatStyle={portfolioCsatStyle}
+          onDrilldown={onDrilldown}
+        />
       </header>
 
       <div className="tam-grid tam-grid--expandable">

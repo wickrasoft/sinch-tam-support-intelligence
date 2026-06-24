@@ -60,8 +60,7 @@ export default function ResponseTimeChart({ timeSeries, summary, onDrilldown }) 
   return (
     <article className="panel panel--chart-drilldown">
       <header className="panel__header">
-        <h2>MTTA & MTTR</h2>
-        <p>Response and resolution times · click stats or chart points to drill down</p>
+        <h2>MTTA &amp; MTTR - Response and resolution times</h2>
       </header>
 
       <div className="series-toggles">

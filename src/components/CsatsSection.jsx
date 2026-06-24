@@ -41,10 +41,10 @@ export default function CsatsSection({
   return (
     <article className="panel">
       <header className="panel__header">
-        <h2>Customer Satisfaction</h2>
-        <p>
-          CSAT scores and comments for survey responses in {periodLabel ?? 'the selected period'}
-        </p>
+        <h2>
+          Customer Satisfaction - CSAT scores and comments for survey responses in{' '}
+          {periodLabel ?? 'the selected period'}
+        </h2>
       </header>
 
       <div className="csat-overview">

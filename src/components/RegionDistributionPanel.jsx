@@ -31,15 +31,9 @@ export default function RegionDistributionPanel({
   return (
     <Tag className={rootClass}>
       <header className={embedded ? 'region-panel__header--embedded' : 'panel__header'}>
-        <h2 className={embedded ? 'region-panel__title--embedded' : undefined}>Regional Distribution</h2>
-        {!embedded && (
-          <p>Portfolio activity across US, EMEA, APAC, and LATAM — click a region to drill down.</p>
-        )}
-        {embedded && (
-          <p className="region-panel__lede--embedded">
-            Click a region to drill down
-          </p>
-        )}
+        <h2 className={embedded ? 'region-panel__title--embedded' : undefined}>
+          Regional Distribution - Portfolio activity across US, EMEA, APAC, and LATAM
+        </h2>
       </header>
 
       <div className={`region-panel__body ${embedded ? 'region-panel__body--embedded' : 'region-panel__body--stacked'}`}>

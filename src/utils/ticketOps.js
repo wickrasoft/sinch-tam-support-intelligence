@@ -3,8 +3,8 @@ import { getTamAvailabilityStatus } from './tamStatus';
 import { resolveTamAvailability } from './tamAvailability';
 
 export const STALE_THRESHOLDS = [
-  { id: '48h', label: '48 hours', shortLabel: '48h', hours: 48 },
-  { id: '72h', label: '72 hours', shortLabel: '72h', hours: 72, default: true },
+  { id: '48h', label: '48 hours', shortLabel: '48h', hours: 48, default: true },
+  { id: '72h', label: '72 hours', shortLabel: '72h', hours: 72 },
   { id: '5d', label: '5 days', shortLabel: '5d', hours: 5 * 24 },
   { id: '7d', label: '7 days', shortLabel: '7d', hours: 7 * 24 },
   { id: '15d', label: '15 days', shortLabel: '15d', hours: 15 * 24 },
@@ -28,7 +28,7 @@ export const AGING_THRESHOLDS = [
   { id: '360plus', label: '360+ days', shortLabel: '360+d', days: 360 },
 ];
 
-export const DEFAULT_STALE_THRESHOLD_ID = '72h';
+export const DEFAULT_STALE_THRESHOLD_ID = '48h';
 export const DEFAULT_AGING_THRESHOLD_ID = '7d';
 
 function findThreshold(thresholds, id, fallbackId) {
@@ -104,7 +104,7 @@ export function daysSinceCreated(ticket, referenceDate) {
   return ticket.aging_days ?? differenceInDays(ref, parseISO(ticket.created_at));
 }
 
-export function getStaleTickets(tickets, referenceDate, hours = 72) {
+export function getStaleTickets(tickets, referenceDate, hours = getStaleThreshold().hours) {
   const ref = typeof referenceDate === 'string' ? parseISO(referenceDate) : referenceDate;
   return tickets
     .filter((t) => {

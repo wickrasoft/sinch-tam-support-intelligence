@@ -33,8 +33,7 @@ export default function ReopeningsChart({ timeSeries, summary, onDrilldown }) {
   return (
     <article className="panel">
       <header className="panel__header">
-        <h2>Ticket Reopenings</h2>
-        <p>Reopen events tracked per period · click a stat for the ticket list</p>
+        <h2>Ticket Reopenings - Reopen events tracked per period</h2>
       </header>
 
       <div className="reopen-highlight">
