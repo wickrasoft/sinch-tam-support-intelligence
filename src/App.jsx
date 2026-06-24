@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
-import dataset from './data/tickets.json';
+import { useDataset } from './hooks/useDataset';
+import DataLoadingScreen from './components/DataLoadingScreen';
 import FilterBar from './components/FilterBar';
 import TabNav from './components/TabNav';
 import ExportBar from './components/ExportBar';
@@ -12,6 +13,7 @@ import OverviewDashboard from './components/OverviewDashboard';
 import AccountHealthDrilldownModal from './components/AccountHealthDrilldownModal';
 import AtRiskAccountsDrilldownModal from './components/AtRiskAccountsDrilldownModal';
 import AttentionTicketsDrilldownModal from './components/AttentionTicketsDrilldownModal';
+import RegionDrilldownModal from './components/RegionDrilldownModal';
 import { StaleThresholdChips, AgingThresholdChips } from './components/OperationalPanels';
 import {
   filterTickets,
@@ -43,7 +45,7 @@ import { buildRegionPortfolioDistribution } from './utils/regionMetrics';
 import { format, parseISO } from 'date-fns';
 import './App.css';
 
-function App() {
+function DashboardApp({ dataset }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [operationalFilter, setOperationalFilter] = useState(null);
@@ -58,6 +60,7 @@ function App() {
   const [accountsAtRiskOnly, setAccountsAtRiskOnly] = useState(false);
   const [atRiskReturnPending, setAtRiskReturnPending] = useState(false);
   const [attentionReturnPending, setAttentionReturnPending] = useState(false);
+  const [regionReturnPending, setRegionReturnPending] = useState(false);
   const [ticketKpiFilter, setTicketKpiFilter] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [filters, setFilters] = useState({
@@ -390,6 +393,7 @@ function App() {
   const handleRegionDrilldown = useCallback((region) => {
     if (!region) {
       setActiveRegionDrilldown(null);
+      setRegionReturnPending(false);
       setFilters((prev) => ({ ...prev, region: '' }));
       return;
     }
@@ -404,10 +408,26 @@ function App() {
       accountId: '',
     }));
     setActiveRegionDrilldown(null);
+    setRegionReturnPending(false);
     setAttentionOnly(false);
     setOperationalFilter(null);
     setTicketKpiFilter(null);
     setActiveTab('overview');
+  }, []);
+
+  const handleRegionViewTams = useCallback((region) => {
+    setFilters((prev) => ({
+      ...prev,
+      region,
+      tamId: '',
+      accountId: '',
+    }));
+    setActiveRegionDrilldown(null);
+    setRegionReturnPending(true);
+    setAttentionOnly(false);
+    setOperationalFilter(null);
+    setTicketKpiFilter(null);
+    setActiveTab('tams');
   }, []);
 
   const handleRegionViewTickets = useCallback((region) => {
@@ -424,17 +444,39 @@ function App() {
     setOperationalFilter(null);
     setTicketKpiFilter(null);
     setActiveRegionDrilldown(null);
+    setRegionReturnPending(true);
     setActiveTab('tickets');
   }, []);
+
+  const handleRegionKpiDrilldown = useCallback((kpiKey, region) => {
+    setActiveRegionDrilldown(null);
+    setActiveKpiDrilldown(kpiKey);
+    setDrilldownContext({ region });
+  }, []);
+
+  const handleBackToRegionDrilldown = useCallback(() => {
+    const region = filters.region;
+    if (!region) return;
+    setRegionReturnPending(false);
+    setTicketKpiFilter(null);
+    setAttentionOnly(false);
+    setOperationalFilter(null);
+    setActiveKpiDrilldown(null);
+    setDrilldownContext(null);
+    setActiveRegionDrilldown(region);
+    setActiveTab('overview');
+  }, [filters.region]);
 
   const handleKpiViewAll = useCallback((kpiKey) => {
     const patch = getKpiFilterPatch(kpiKey);
     const { kpiFilter, ...filterPatch } = patch;
+    const regionScope = drilldownContext?.region;
     setFilters((prev) => ({
       ...prev,
       ...filterPatch,
       ...(drilldownContext?.tamId ? { tamId: drilldownContext.tamId } : {}),
       ...(drilldownContext?.accountId ? { accountId: drilldownContext.accountId } : {}),
+      ...(regionScope ? { region: regionScope } : {}),
       ...(drilldownContext?.bucketDate
         ? { referenceDate: format(parseISO(drilldownContext.bucketDate), 'yyyy-MM-dd') }
         : {}),
@@ -443,6 +485,7 @@ function App() {
     setAttentionOnly(false);
     setActiveKpiDrilldown(null);
     setDrilldownContext(null);
+    if (regionScope) setRegionReturnPending(true);
     setActiveTab('tickets');
   }, [drilldownContext]);
 
@@ -452,6 +495,7 @@ function App() {
       ...prev,
       tamId: ctx.tamId ?? '',
       accountId: ctx.accountId ?? '',
+      region: ctx.region ?? drilldownContext?.region ?? prev.region,
     }));
     setAttentionOnly(false);
     setOperationalFilter(null);
@@ -479,6 +523,7 @@ function App() {
     setAccountsAtRiskOnly(false);
     setAtRiskReturnPending(false);
     setAttentionReturnPending(false);
+    setRegionReturnPending(false);
   }, []);
 
   const handleTicketFilterPortfolio = useCallback((ticket) => {
@@ -624,13 +669,41 @@ function App() {
         )}
 
         {activeTab === 'tams' && (
-          <TamDirectory
+          <>
+            {regionReturnPending && filters.region && (
+              <div className="filter-banner filter-banner--region">
+                <div className="filter-banner__main">
+                  <button
+                    type="button"
+                    className="filter-banner__back filter-banner__back--region"
+                    onClick={handleBackToRegionDrilldown}
+                  >
+                    ← Back to {filters.region} region
+                  </button>
+                  <span className="filter-banner__label">
+                    TAM directory filtered to {filters.region}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="filter-banner__secondary"
+                  onClick={() => {
+                    setRegionReturnPending(false);
+                    setFilters((prev) => ({ ...prev, region: '' }));
+                  }}
+                >
+                  Show all TAMs
+                </button>
+              </div>
+            )}
+            <TamDirectory
             tams={tams}
             tamMetrics={tamMetrics}
             referenceDate={activeFilters.referenceDate}
             onFilterTam={handleFilterTam}
             onSelectAccount={handleAccountHealthDrilldown}
           />
+          </>
         )}
 
         {activeTab === 'accounts' && (
@@ -673,7 +746,9 @@ function App() {
                   ? 'filter-banner--at-risk'
                   : attentionReturnPending
                     ? 'filter-banner--attention'
-                    : ''
+                    : regionReturnPending
+                      ? 'filter-banner--region'
+                      : ''
               }`}>
                 <div className="filter-banner__main">
                   {atRiskReturnPending && (
@@ -694,6 +769,15 @@ function App() {
                       ← Back to attention tickets
                     </button>
                   )}
+                  {regionReturnPending && filters.region && (
+                    <button
+                      type="button"
+                      className="filter-banner__back filter-banner__back--region"
+                      onClick={handleBackToRegionDrilldown}
+                    >
+                      ← Back to {filters.region} region
+                    </button>
+                  )}
                   <span className="filter-banner__label">
                     {ticketKpiFilter && KPI_CONFIG[ticketKpiFilter]?.title}
                     {attentionOnly && 'Showing tickets needing attention only'}
@@ -708,6 +792,9 @@ function App() {
                     )}
                     {operationalFilter === 'at-risk' && (
                       <>All tickets from {atRiskAccounts.length} at-risk accounts</>
+                    )}
+                    {regionReturnPending && filters.region && !operationalFilter && !attentionOnly && !ticketKpiFilter && (
+                      <>Tickets in {filters.region} region</>
                     )}
                   </span>
                 </div>
@@ -742,9 +829,12 @@ function App() {
           periodLabel={periodLabel}
           onClose={() => setActiveRegionDrilldown(null)}
           onFilterPortfolio={handleRegionFilterPortfolio}
+          onViewTams={handleRegionViewTams}
           onViewTickets={handleRegionViewTickets}
+          onKpiDrilldown={handleRegionKpiDrilldown}
           onFilterTam={(tamId) => {
             setActiveRegionDrilldown(null);
+            setRegionReturnPending(false);
             handleFilterTam(tamId);
           }}
         />
@@ -830,6 +920,15 @@ function App() {
       </footer>
     </div>
   );
+}
+
+function App() {
+  const { dataset, loading, error } = useDataset();
+
+  if (loading) return <DataLoadingScreen />;
+  if (error || !dataset) return <DataLoadingScreen error={error ?? new Error('No data available')} />;
+
+  return <DashboardApp dataset={dataset} />;
 }
 
 export default App;

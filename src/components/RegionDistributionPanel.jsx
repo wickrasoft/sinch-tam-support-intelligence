@@ -24,7 +24,9 @@ export default function RegionDistributionPanel({
   );
 
   const Tag = embedded ? 'div' : 'article';
-  const rootClass = embedded ? 'region-panel region-panel--embedded' : 'panel region-panel';
+  const rootClass = embedded
+    ? 'region-panel region-panel--embedded'
+    : 'panel region-panel panel--chart-drilldown';
 
   return (
     <Tag className={rootClass}>

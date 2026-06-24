@@ -787,6 +787,6 @@ function generateDataset() {
 }
 
 const dataset = generateDataset();
-const outPath = join(__dirname, '../src/data/tickets.json');
-writeFileSync(outPath, JSON.stringify(dataset));
-console.log(`Generated ${dataset.tickets.length} tickets, ${TAMS.length} TAMs, ${ACCOUNTS.length} accounts → ${outPath}`);
+const publicPath = join(__dirname, '../public/data/tickets.json');
+writeFileSync(publicPath, JSON.stringify(dataset));
+console.log(`Generated ${dataset.tickets.length} tickets, ${TAMS.length} TAMs, ${ACCOUNTS.length} accounts → ${publicPath}`);

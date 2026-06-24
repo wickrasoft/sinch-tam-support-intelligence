@@ -19,7 +19,7 @@ function ChartTooltip({ active, payload }) {
       <strong>{row.region}</strong>
       <span>{row.value} activity ({pct}%)</span>
       <span>{row.tamCount} TAM{row.tamCount !== 1 ? 's' : ''}</span>
-      <span>{row.created} created</span>
+      <span>{row.created} created · click to drill down</span>
     </div>
   );
 }
@@ -37,9 +37,20 @@ export default function RegionDistributionChart({
   );
   const innerRadius = Math.round(height * 0.25);
   const outerRadius = Math.round(height * 0.405);
+  const centerSize = innerRadius * 2;
+
+  const handleSliceClick = (region) => {
+    if (!region || !onRegionClick) return;
+    onRegionClick(region);
+  };
+
+  const handlePieClick = (entry) => {
+    const region = entry?.region ?? entry?.payload?.region;
+    handleSliceClick(region);
+  };
 
   return (
-    <div className="region-chart">
+    <div className="region-chart region-chart--drilldown">
       <ResponsiveContainer width="100%" height={height}>
         <PieChart>
           <Pie
@@ -52,8 +63,9 @@ export default function RegionDistributionChart({
             outerRadius={outerRadius}
             paddingAngle={2}
             stroke="none"
-            onClick={(_, index) => onRegionClick?.(chartData[index]?.region)}
-            cursor="pointer"
+            isAnimationActive={false}
+            cursor={onRegionClick ? 'pointer' : 'default'}
+            onClick={handlePieClick}
           >
             {chartData.map((entry) => (
               <Cell
@@ -68,10 +80,17 @@ export default function RegionDistributionChart({
           <Tooltip content={<ChartTooltip />} />
         </PieChart>
       </ResponsiveContainer>
-      <div className="region-chart__center" aria-hidden="true">
+      <button
+        type="button"
+        className="region-chart__center"
+        style={{ width: centerSize, height: centerSize }}
+        onClick={() => onRegionClick?.(null)}
+        title="Clear region selection"
+        aria-label={`${total} total portfolio activity`}
+      >
         <span className="region-chart__center-value">{total}</span>
         <span className="region-chart__center-label">Total</span>
-      </div>
+      </button>
     </div>
   );
 }

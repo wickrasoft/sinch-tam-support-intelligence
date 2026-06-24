@@ -1,6 +1,16 @@
 import { useEffect } from 'react';
+import { KPI_KEYS } from '../utils/kpiDrilldown';
 import { REGION_CHART_COLORS } from '../utils/regionMetrics';
 import DrilldownFooter from './DrilldownFooter';
+
+const REGION_STAT_DRILLS = {
+  activity: null,
+  tams: null,
+  created: KPI_KEYS.CREATED,
+  p1p2: KPI_KEYS.P1P2,
+  resolved: KPI_KEYS.RESOLVED,
+  closed: KPI_KEYS.CLOSED,
+};
 
 export default function RegionDrilldownModal({
   region,
@@ -8,8 +18,10 @@ export default function RegionDrilldownModal({
   periodLabel,
   onClose,
   onFilterPortfolio,
+  onViewTams,
   onViewTickets,
   onFilterTam,
+  onKpiDrilldown,
 }) {
   useEffect(() => {
     const onKey = (e) => {
@@ -25,6 +37,20 @@ export default function RegionDrilldownModal({
   const share = regionData.__portfolioTotal
     ? ((total / regionData.__portfolioTotal) * 100).toFixed(1)
     : '0';
+
+  const openKpi = (key) => {
+    if (!key || !onKpiDrilldown) return;
+    onKpiDrilldown(key, region);
+  };
+
+  const stats = [
+    { key: 'activity', label: `Activity (${share}%)`, value: total, drillable: false },
+    { key: 'tams', label: 'TAMs', value: regionData.tamCount, drillable: false },
+    { key: 'created', label: 'Created', value: regionData.created, drillable: true },
+    { key: 'p1p2', label: 'P1/P2', value: regionData.p1p2, drillable: true },
+    { key: 'resolved', label: 'Resolved', value: regionData.resolved, drillable: true },
+    { key: 'closed', label: 'Closed', value: regionData.closed, drillable: true },
+  ];
 
   return (
     <div className="kpi-drill-overlay" role="presentation" onClick={onClose}>
@@ -43,7 +69,7 @@ export default function RegionDrilldownModal({
               />
               {region} Region
             </h2>
-            <p>Portfolio activity breakdown for TAMs in {region}</p>
+            <p>Portfolio activity for TAMs in {region} · click stats or TAM names to drill down</p>
             <span className="kpi-drill__period">{periodLabel}</span>
           </div>
           <button type="button" className="kpi-drill__close" onClick={onClose} aria-label="Close">
@@ -54,30 +80,23 @@ export default function RegionDrilldownModal({
         <div className="kpi-drill__body">
           <section className="kpi-drill__section">
             <div className="kpi-drill__stat-grid">
-              <div className="kpi-drill__mini-stat">
-                <span className="kpi-drill__mini-value">{total}</span>
-                <span className="kpi-drill__mini-label">Activity ({share}%)</span>
-              </div>
-              <div className="kpi-drill__mini-stat">
-                <span className="kpi-drill__mini-value">{regionData.tamCount}</span>
-                <span className="kpi-drill__mini-label">TAMs</span>
-              </div>
-              <div className="kpi-drill__mini-stat">
-                <span className="kpi-drill__mini-value">{regionData.created}</span>
-                <span className="kpi-drill__mini-label">Created</span>
-              </div>
-              <div className="kpi-drill__mini-stat">
-                <span className="kpi-drill__mini-value">{regionData.p1p2}</span>
-                <span className="kpi-drill__mini-label">P1/P2</span>
-              </div>
-              <div className="kpi-drill__mini-stat">
-                <span className="kpi-drill__mini-value">{regionData.resolved}</span>
-                <span className="kpi-drill__mini-label">Resolved</span>
-              </div>
-              <div className="kpi-drill__mini-stat">
-                <span className="kpi-drill__mini-value">{regionData.closed}</span>
-                <span className="kpi-drill__mini-label">Closed</span>
-              </div>
+              {stats.map((stat) => {
+                const kpiKey = REGION_STAT_DRILLS[stat.key];
+                const Tag = stat.drillable && kpiKey && onKpiDrilldown ? 'button' : 'div';
+                return (
+                  <Tag
+                    key={stat.key}
+                    type={Tag === 'button' ? 'button' : undefined}
+                    className={`kpi-drill__mini-stat ${
+                      stat.drillable && kpiKey ? 'kpi-drill__mini-stat--clickable region-drill-modal__stat' : ''
+                    }`}
+                    onClick={stat.drillable && kpiKey ? () => openKpi(kpiKey) : undefined}
+                  >
+                    <span className="kpi-drill__mini-value">{stat.value}</span>
+                    <span className="kpi-drill__mini-label">{stat.label}</span>
+                  </Tag>
+                );
+              })}
             </div>
           </section>
 
@@ -100,15 +119,14 @@ export default function RegionDrilldownModal({
                     .slice()
                     .sort((a, b) => (b.metrics.activityTotal ?? 0) - (a.metrics.activityTotal ?? 0))
                     .map((tam) => (
-                      <tr key={tam.tam_id}>
+                      <tr
+                        key={tam.tam_id}
+                        className="data-table__row--clickable"
+                        onClick={() => onFilterTam?.(tam.tam_id)}
+                        title="Filter portfolio to this TAM"
+                      >
                         <td>
-                          <button
-                            type="button"
-                            className="region-drill-modal__tam-link"
-                            onClick={() => onFilterTam?.(tam.tam_id)}
-                          >
-                            {tam.tam_name}
-                          </button>
+                          <span className="region-drill-modal__tam-link">{tam.tam_name}</span>
                         </td>
                         <td>{tam.metrics.activityTotal ?? 0}</td>
                         <td>{tam.metrics.totalTickets ?? 0}</td>
@@ -126,7 +144,10 @@ export default function RegionDrilldownModal({
         <DrilldownFooter
           onClose={onClose}
           onFilterPortfolio={() => onFilterPortfolio?.(region)}
+          onViewAccount={() => onViewTams?.(region)}
           onViewTickets={() => onViewTickets?.(region)}
+          viewAccountLabel="View TAMs →"
+          viewTicketsLabel="View tickets →"
         />
       </div>
     </div>

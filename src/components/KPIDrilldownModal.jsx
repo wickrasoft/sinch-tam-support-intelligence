@@ -195,12 +195,16 @@ export default function KPIDrilldownModal({
     const next = { ...filters };
     if (drilldownContext?.tamId) next.tamId = drilldownContext.tamId;
     if (drilldownContext?.accountId) next.accountId = drilldownContext.accountId;
+    if (drilldownContext?.region) next.region = drilldownContext.region;
     if (drilldownContext?.bucketDate) next.referenceDate = drilldownContext.bucketDate;
     return next;
   }, [filters, drilldownContext]);
 
   const hasScopedContext = Boolean(
-    drilldownContext?.tamId || drilldownContext?.accountId || drilldownContext?.bucketDate,
+    drilldownContext?.tamId
+      || drilldownContext?.accountId
+      || drilldownContext?.region
+      || drilldownContext?.bucketDate,
   );
 
   const scopedSummary = useMemo(() => {
@@ -269,7 +273,10 @@ export default function KPIDrilldownModal({
       }[drilldownContext.disposition] ?? drilldownContext.disposition
     : null;
   const displayPeriod = drilldownContext?.bucketLabel ?? periodLabel;
-  const hasPortfolioScope = Boolean(drilldownContext?.tamId || drilldownContext?.accountId);
+  const hasPortfolioScope = Boolean(
+    drilldownContext?.tamId || drilldownContext?.accountId || drilldownContext?.region,
+  );
+  const regionScope = drilldownContext?.region ?? null;
 
   return (
     <div className="kpi-drill-overlay" onClick={onClose} role="presentation">
@@ -289,6 +296,9 @@ export default function KPIDrilldownModal({
             )}
             {accountName && (
               <span className="kpi-drill__scope">Account: {accountName}</span>
+            )}
+            {regionScope && (
+              <span className="kpi-drill__scope">Region: {regionScope}</span>
             )}
             {dispositionScope && (
               <span className="kpi-drill__scope">Status: {dispositionScope}</span>
