@@ -4303,6 +4303,17 @@ body {
   border-bottom-color: var(--border);
 }
 
+.tam-status-tooltip__popup--fixed {
+  position: fixed;
+  z-index: 2000;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: none;
+  right: auto;
+  bottom: auto;
+}
+
 .tam-availability-status--online {
   background: rgba(16, 185, 129, 0.18);
   color: #6ee7b7;

@@ -557,7 +557,7 @@ export default function TamOverview({
                           <TamStatusIcon
                             tam={tamMeta}
                             status={availabilityStatus}
-                            className="tam-card__online-icon tam-status-tooltip--below"
+                            className="tam-card__online-icon"
                             showTooltip
                             details={availabilityDetails}
                           />
