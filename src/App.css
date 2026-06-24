@@ -1661,11 +1661,41 @@ body {
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
   font-size: 0.8rem;
+  color: var(--text);
 }
 
 .chart-tooltip__label {
   font-weight: 600;
   margin-bottom: 0.25rem;
+  color: var(--text);
+}
+
+.chart-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.2rem 0 0;
+  color: var(--text-muted);
+}
+
+.chart-tooltip__row strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.recharts-default-tooltip {
+  background-color: var(--bg-panel) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+.recharts-default-tooltip .recharts-tooltip-label,
+.recharts-default-tooltip .recharts-tooltip-item {
+  color: var(--text) !important;
+}
+
+.panel .recharts-tooltip-cursor {
+  fill: rgba(51, 65, 85, 0.45);
 }
 
 .footer {

@@ -9,6 +9,22 @@ import {
   Cell,
 } from 'recharts';
 
+function HealthTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload;
+  return (
+    <div className="chart-tooltip">
+      <p className="chart-tooltip__label">{row.name}</p>
+      <p className="chart-tooltip__row">
+        <span>Health Score</span>
+        <strong>{row.score}/100</strong>
+      </p>
+    </div>
+  );
+}
+
+const CHART_CURSOR_FILL = 'rgba(51, 65, 85, 0.45)';
+
 export default function AccountHealthChart({ accountMetrics, onAccountDrilldown }) {
   const data = [...accountMetrics]
     .sort((a, b) => (a.healthScore ?? 0) - (b.healthScore ?? 0))
@@ -31,10 +47,7 @@ export default function AccountHealthChart({ accountMetrics, onAccountDrilldown 
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
             <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} />
             <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={110} />
-            <Tooltip
-              formatter={(v) => [`${v}/100`, 'Health Score']}
-              contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8 }}
-            />
+            <Tooltip content={<HealthTooltip />} cursor={{ fill: CHART_CURSOR_FILL }} />
             <Bar
               dataKey="score"
               name="Health Score"
