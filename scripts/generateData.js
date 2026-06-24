@@ -10,7 +10,7 @@ import { dirname, join } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const TAMS = [
-  { id: 'tam-001', name: 'Sarah Chen', email: 'sarah.chen@sinch.com', region: 'US' },
+  { id: 'tam-001', name: 'Kalum Wickramatunga', email: 'kalum.wickramatunga@sinch.com', region: 'EMEA' },
   { id: 'tam-002', name: 'Marcus Rivera', email: 'marcus.rivera@sinch.com', region: 'US' },
   { id: 'tam-003', name: 'Priya Patel', email: 'priya.patel@sinch.com', region: 'EMEA' },
   { id: 'tam-004', name: 'James Okonkwo', email: 'james.okonkwo@sinch.com', region: 'APAC' },
@@ -28,24 +28,24 @@ const TAMS = [
 ];
 
 const ACCOUNT_DEFS = [
-  { name: 'Acme Corporation', tam_id: 'tam-001', tier: 'Enterprise', industry: 'Manufacturing' },
-  { name: 'GlobalTech Industries', tam_id: 'tam-001', tier: 'Enterprise', industry: 'Technology' },
-  { name: 'Nexus Financial Group', tam_id: 'tam-002', tier: 'Enterprise', industry: 'Finance' },
+  { name: 'Google', tam_id: 'tam-001', tier: 'Enterprise', industry: 'Technology' },
+  { name: 'Adobe', tam_id: 'tam-001', tier: 'Enterprise', industry: 'Technology' },
+  { name: 'PayPal', tam_id: 'tam-002', tier: 'Enterprise', industry: 'Finance' },
   { name: 'HealthFirst Systems', tam_id: 'tam-002', tier: 'Enterprise', industry: 'Healthcare' },
   { name: 'RetailMax International', tam_id: 'tam-003', tier: 'Mid-Market', industry: 'Retail' },
   { name: 'CloudScale Ltd', tam_id: 'tam-003', tier: 'Enterprise', industry: 'SaaS' },
   { name: 'EduLearn Platform', tam_id: 'tam-004', tier: 'Mid-Market', industry: 'Education' },
-  { name: 'LogiTrans Shipping', tam_id: 'tam-004', tier: 'Enterprise', industry: 'Logistics' },
+  { name: 'DHL', tam_id: 'tam-004', tier: 'Enterprise', industry: 'Logistics' },
   { name: 'MedCore Analytics', tam_id: 'tam-005', tier: 'Enterprise', industry: 'Healthcare' },
   { name: 'Aurora Energy Corp', tam_id: 'tam-006', tier: 'Enterprise', industry: 'Energy' },
   { name: 'FinEdge Capital', tam_id: 'tam-006', tier: 'Enterprise', industry: 'Finance' },
   { name: 'NovaRetail Group', tam_id: 'tam-007', tier: 'Mid-Market', industry: 'Retail' },
-  { name: 'Skyline Media', tam_id: 'tam-007', tier: 'Enterprise', industry: 'Media' },
+  { name: 'Facebook', tam_id: 'tam-007', tier: 'Enterprise', industry: 'Media' },
   { name: 'Baltic Shipping Co', tam_id: 'tam-008', tier: 'Enterprise', industry: 'Logistics' },
   { name: 'GreenField AgriTech', tam_id: 'tam-009', tier: 'Mid-Market', industry: 'Agriculture' },
   { name: 'Pacific Telecom', tam_id: 'tam-010', tier: 'Enterprise', industry: 'Telecom' },
   { name: 'Horizon Insurance', tam_id: 'tam-010', tier: 'Enterprise', industry: 'Insurance' },
-  { name: 'Lumière Cosmetics', tam_id: 'tam-011', tier: 'Mid-Market', industry: 'Consumer' },
+  { name: 'Instagram', tam_id: 'tam-011', tier: 'Mid-Market', industry: 'Media' },
   { name: 'Andes Mining SA', tam_id: 'tam-012', tier: 'Enterprise', industry: 'Mining' },
   { name: 'Singapore FinHub', tam_id: 'tam-013', tier: 'Enterprise', industry: 'Finance' },
   { name: 'Dublin DataWorks', tam_id: 'tam-014', tier: 'Enterprise', industry: 'Technology' },
@@ -735,9 +735,14 @@ function generateTicket(id, account, rng, createdAt, endDate) {
   return ticket;
 }
 
+function getDatasetEndDate() {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59));
+}
+
 function generateDataset() {
   const rng = seededRandom(42);
-  const endDate = new Date('2026-06-22T23:59:59Z');
+  const endDate = getDatasetEndDate();
   const startDate = new Date('2024-01-01T00:00:00Z');
   const tickets = [];
   let ticketId = 1;

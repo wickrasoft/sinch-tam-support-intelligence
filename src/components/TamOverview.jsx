@@ -11,6 +11,16 @@ import {
   TAM_STATUS_CONFIG,
 } from '../utils/tamStatus';
 
+const FEATURED_TAM_ID = 'tam-001';
+
+function sortFeaturedTamFirst(tams) {
+  return [...tams].sort((a, b) => {
+    if (a.tam_id === FEATURED_TAM_ID) return -1;
+    if (b.tam_id === FEATURED_TAM_ID) return 1;
+    return 0;
+  });
+}
+
 const OPEN_DISPOSITION_LABELS = {
   in_progress: 'IP',
   waiting_for_response: 'WFR',
@@ -432,12 +442,14 @@ export default function TamOverview({
           accounts: [],
         }));
 
-    if (!selectedRegion) return base;
+    const filtered = !selectedRegion
+      ? base
+      : base.filter((tam) => {
+          const meta = allTams.find((t) => t.id === tam.tam_id);
+          return normalizeTamRegion(meta?.region) === selectedRegion;
+        });
 
-    return base.filter((tam) => {
-      const meta = allTams.find((t) => t.id === tam.tam_id);
-      return normalizeTamRegion(meta?.region) === selectedRegion;
-    });
+    return sortFeaturedTamFirst(filtered);
   }, [tamMetrics, allTams, selectedRegion]);
 
   const portfolioBreakdown = displayTams.reduce(

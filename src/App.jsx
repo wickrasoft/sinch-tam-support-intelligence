@@ -71,7 +71,7 @@ function DashboardApp({ dataset }) {
     region: '',
     slaBreachOnly: false,
     period: 'month',
-    referenceDate: '2026-06-22',
+    referenceDate: new Date().toISOString().slice(0, 10),
   });
 
   const { tickets: allTickets, tams, accounts, meta } = dataset;
