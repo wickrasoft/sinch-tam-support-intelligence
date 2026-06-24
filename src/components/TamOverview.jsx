@@ -512,7 +512,7 @@ export default function TamOverview({
     <article className="panel tam-overview-panel">
       <header className="panel__header">
         <div className="ops-panel__title-row tam-overview-panel__title-row">
-          <h2>TAM Portfolio &amp; Availability - Live status and portfolio metrics for the selected period</h2>
+          <h2>TAM Portfolio &amp; Availability</h2>
           <div className="tam-overview-online" title="TAMs currently online">
             <span className="tam-overview-online__label">Online</span>
             <span className="ops-panel__count ops-panel__count--good">

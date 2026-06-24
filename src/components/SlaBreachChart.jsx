@@ -136,7 +136,7 @@ export default function SlaBreachChart({ accountData, timeSeries, onDrilldown, e
   return (
     <Tag className={rootClass}>
       <header className={embedded ? 'sla-breach-section__header' : 'panel__header'}>
-        <h2>SLA Breaches - First-response and resolution SLA violations</h2>
+        <h2>SLA Breaches - First Response and Resolution</h2>
       </header>
 
       <div className={`panel__chart sla-breach-panel__chart ${embedded ? 'panel__chart--compact' : ''}`}>
