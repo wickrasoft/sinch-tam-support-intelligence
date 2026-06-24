@@ -4,7 +4,8 @@ import TamStatusIcon from './TamStatusIcon';
 import { formatDurationHours, csatIndicator, getPortfolioActivityBreakdown, sumPortfolioActivityBreakdown } from '../utils/metrics';
 import { computeHealthScore, healthIndicator } from '../utils/health';
 import { KPI_KEYS } from '../utils/kpiDrilldown';
-import { formatAccountCount } from '../utils/text';
+import { formatAccountCount, formatTamDisplayName } from '../utils/text';
+import { TAM_REGIONS } from '../utils/regionMetrics';
 import {
   enrichTamsWithAvailability,
   getTamAvailabilityStatus,
@@ -12,13 +13,18 @@ import {
   TAM_STATUS_CONFIG,
 } from '../utils/tamStatus';
 
-const FEATURED_TAM_ID = 'tam-001';
+function sortTamsByRegionAndName(tams, allTams) {
+  const regionOrder = (tam) => {
+    const meta = allTams.find((t) => t.id === tam.tam_id);
+    const region = normalizeTamRegion(meta?.region);
+    const index = TAM_REGIONS.indexOf(region);
+    return index === -1 ? TAM_REGIONS.length : index;
+  };
 
-function sortFeaturedTamFirst(tams) {
   return [...tams].sort((a, b) => {
-    if (a.tam_id === FEATURED_TAM_ID) return -1;
-    if (b.tam_id === FEATURED_TAM_ID) return 1;
-    return 0;
+    const regionDiff = regionOrder(a) - regionOrder(b);
+    if (regionDiff !== 0) return regionDiff;
+    return a.tam_name.localeCompare(b.tam_name);
   });
 }
 
@@ -466,7 +472,7 @@ export default function TamOverview({
           return normalizeTamRegion(meta?.region) === selectedRegion;
         });
 
-    return sortFeaturedTamFirst(filtered);
+    return sortTamsByRegionAndName(filtered, allTams);
   }, [tamMetrics, allTams, selectedRegion]);
 
   const portfolioBreakdown = displayTams.reduce(
@@ -530,7 +536,24 @@ export default function TamOverview({
                 <div className="tam-card__head">
                   <div className="tam-card__title-row">
                     <h3>
-                      <span className="tam-card__name">{tam.tam_name}</span>
+                      {tamMeta && (
+                        <span
+                          className={`tam-card__online-badge tam-card__online-badge--${availabilityStatus}`}
+                        >
+                          <TamStatusIcon
+                            tam={tamMeta}
+                            status={availabilityStatus}
+                            className="tam-card__online-icon tam-status-tooltip--below"
+                            showTooltip
+                            details={availabilityDetails}
+                          />
+                        </span>
+                      )}
+                      <span className="tam-card__name">
+                        {formatTamDisplayName(tam.tam_name, tamMeta?.region)}
+                      </span>
+                    </h3>
+                    <div className="tam-card__corner">
                       <div className="tam-card__badge-group">
                         <button
                           type="button"
@@ -550,27 +573,12 @@ export default function TamOverview({
                           onDrilldown={onDrilldown}
                         />
                       </div>
-                    </h3>
-                    <div className="tam-card__corner">
-                      {tamMeta && (
-                        <span
-                          className={`tam-card__online-badge tam-card__online-badge--${availabilityStatus}`}
-                          title={TAM_STATUS_CONFIG[availabilityStatus]?.label ?? availabilityStatus}
-                        >
-                          <TamStatusIcon
-                            tam={tamMeta}
-                            status={availabilityStatus}
-                            className="tam-card__online-icon"
-                          />
-                        </span>
-                      )}
                       <span className="tam-card__chevron">{expanded ? '▲' : '▼'}</span>
                     </div>
                   </div>
                   <div className="tam-card__meta-row">
                     <span className="tam-card__accounts-count">
                       {formatAccountCount(tam.accounts?.length ?? 0)}
-                      {tamMeta?.region ? ` · ${normalizeTamRegion(tamMeta.region)}` : ''}
                     </span>
                     {availabilityDetails.length > 0 && (
                       <span className="tam-card__availability-detail">
