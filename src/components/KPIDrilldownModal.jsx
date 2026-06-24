@@ -11,6 +11,7 @@ import {
   formatKpiComparison,
   KPI_KEYS,
 } from '../utils/kpiDrilldown';
+import { formatAccountCount } from '../utils/text';
 import CsatFeedbackList from './CsatFeedbackList';
 import DrilldownFooter from './DrilldownFooter';
 
@@ -368,7 +369,7 @@ export default function KPIDrilldownModal({
           )}
 
           <section className="kpi-drill__section">
-            <h3>By account ({breakdown.length} accounts)</h3>
+            <h3>By Account ({formatAccountCount(breakdown.length)})</h3>
             <AccountBreakdownTable breakdown={breakdown} kpiKey={kpiKey} />
           </section>
 

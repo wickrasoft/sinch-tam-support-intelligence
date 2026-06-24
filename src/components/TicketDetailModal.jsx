@@ -261,7 +261,7 @@ export default function TicketDetailModal({
             )}
             {onViewAccount && (
               <button type="button" className="zd-btn zd-btn--secondary" onClick={() => onViewAccount(ticket)}>
-                View account →
+                View Account →
               </button>
             )}
             {onViewTickets && (

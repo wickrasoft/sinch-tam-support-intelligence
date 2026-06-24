@@ -4,7 +4,7 @@ export default function DrilldownFooter({
   onViewAccount,
   onViewTickets,
   filterLabel = 'Filter portfolio →',
-  viewAccountLabel = 'View account →',
+  viewAccountLabel = 'View Account →',
   viewTicketsLabel = 'View tickets →',
 }) {
   return (

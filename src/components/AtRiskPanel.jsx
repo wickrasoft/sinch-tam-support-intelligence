@@ -1,4 +1,5 @@
 import AtRiskAccountCard from './AtRiskAccountCard';
+import { accountWord } from '../utils/text';
 
 export default function AtRiskPanel({ atRiskAccounts, onAccountDrilldown, onOpenDrilldown }) {
   if (!atRiskAccounts.length) {
@@ -6,11 +7,11 @@ export default function AtRiskPanel({ atRiskAccounts, onAccountDrilldown, onOpen
       <article className="panel alert-panel at-risk-panel at-risk-panel--clear">
         <header className="panel__header">
           <h2>Accounts Requiring Attention</h2>
-          <p>No accounts flagged at-risk for the current filters</p>
+          <p>No Accounts flagged at-risk for the current filters</p>
         </header>
         <div className="alert-panel__empty">
           <span className="alert-panel__empty-icon">✓</span>
-          <p>All accounts within acceptable SLA, CSAT, and priority thresholds.</p>
+          <p>All Accounts within acceptable SLA, CSAT, and priority thresholds.</p>
         </div>
       </article>
     );
@@ -26,8 +27,8 @@ export default function AtRiskPanel({ atRiskAccounts, onAccountDrilldown, onOpen
               type="button"
               className="alert-panel__count alert-panel__count--clickable"
               onClick={onOpenDrilldown}
-              title="View all at-risk accounts"
-              aria-label={`View all ${atRiskAccounts.length} at-risk accounts`}
+              title="View all at-risk Accounts"
+              aria-label={`View all ${atRiskAccounts.length} at-risk ${accountWord(atRiskAccounts.length)}`}
             >
               {atRiskAccounts.length}
             </button>

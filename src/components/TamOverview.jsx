@@ -4,6 +4,7 @@ import TamStatusIcon from './TamStatusIcon';
 import { formatDurationHours, csatIndicator, getPortfolioActivityBreakdown, sumPortfolioActivityBreakdown } from '../utils/metrics';
 import { computeHealthScore, healthIndicator } from '../utils/health';
 import { KPI_KEYS } from '../utils/kpiDrilldown';
+import { formatAccountCount } from '../utils/text';
 import {
   enrichTamsWithAvailability,
   getTamAvailabilityStatus,
@@ -105,20 +106,20 @@ function TamCardCsatBadge({ avgCsat, tamId, onDrilldown }) {
     return (
       <button
         type="button"
-        className="tam-card__csat tam-card__csat--clickable"
+        className="tam-card__badge tam-card__badge--csat tam-card__badge--clickable"
         title="Average CSAT for ratings in period — click to drill down"
         onClick={openDrilldown}
       >
-        <span className="tam-card__csat-label">CSAT</span>
-        <span className="tam-card__csat-value" style={{ color: csat.color }}>{value}</span>
+        <span className="tam-card__badge-label">CSAT</span>
+        <span className="tam-card__badge-value" style={{ color: csat.color }}>{value}</span>
       </button>
     );
   }
 
   return (
-    <span className="tam-card__csat">
-      <span className="tam-card__csat-label">CSAT</span>
-      <span className="tam-card__csat-value" style={{ color: csat.color }}>{value}</span>
+    <span className="tam-card__badge tam-card__badge--csat">
+      <span className="tam-card__badge-label">CSAT</span>
+      <span className="tam-card__badge-value" style={{ color: csat.color }}>{value}</span>
     </span>
   );
 }
@@ -529,23 +530,25 @@ export default function TamOverview({
                 <div className="tam-card__head">
                   <div className="tam-card__title-row">
                     <h3>
-                      <button
-                        type="button"
-                        className="tam-card__total tam-card__total--clickable"
-                        title="All tickets created in period — click to drill down"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDrilldown?.(KPI_KEYS.CREATED, { tamId: tam.tam_id });
-                        }}
-                      >
-                        <span className="tam-card__total-label">Total</span>
-                        <span className="tam-card__total-handled">{activityTotal}</span>
-                      </button>
-                      <TamCardCsatBadge
-                        avgCsat={tam.metrics.avgCsat}
-                        tamId={tam.tam_id}
-                        onDrilldown={onDrilldown}
-                      />
+                      <div className="tam-card__badge-group">
+                        <button
+                          type="button"
+                          className="tam-card__badge tam-card__badge--total tam-card__badge--clickable"
+                          title="All tickets created in period — click to drill down"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDrilldown?.(KPI_KEYS.CREATED, { tamId: tam.tam_id });
+                          }}
+                        >
+                          <span className="tam-card__badge-label">Total</span>
+                          <span className="tam-card__badge-value">{activityTotal}</span>
+                        </button>
+                        <TamCardCsatBadge
+                          avgCsat={tam.metrics.avgCsat}
+                          tamId={tam.tam_id}
+                          onDrilldown={onDrilldown}
+                        />
+                      </div>
                       <span className="tam-card__name">{tam.tam_name}</span>
                     </h3>
                     <div className="tam-card__corner">
@@ -566,7 +569,7 @@ export default function TamOverview({
                   </div>
                   <div className="tam-card__meta-row">
                     <span className="tam-card__accounts-count">
-                      {tam.accounts?.length ?? 0} account{(tam.accounts?.length ?? 0) !== 1 ? 's' : ''}
+                      {formatAccountCount(tam.accounts?.length ?? 0)}
                       {tamMeta?.region ? ` · ${normalizeTamRegion(tamMeta.region)}` : ''}
                     </span>
                     {availabilityDetails.length > 0 && (

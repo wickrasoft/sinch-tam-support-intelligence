@@ -159,7 +159,7 @@ export default function AccountHealthDrilldownModal({
           <section className="kpi-drill__section">
             <h3>Tickets ({accountTickets.length})</h3>
             {accountTickets.length === 0 ? (
-              <p className="muted">No tickets for this account in the selected period.</p>
+              <p className="muted">No tickets for this Account in the selected period.</p>
             ) : (
               <div className="table-wrap kpi-drill__table-wrap">
                 <table className="data-table data-table--compact">

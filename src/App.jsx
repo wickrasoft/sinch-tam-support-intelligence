@@ -42,6 +42,7 @@ import {
   buildComparisonSummary,
 } from './utils/health';
 import { getTicketsForKpi, getKpiFilterPatch, KPI_CONFIG } from './utils/kpiDrilldown';
+import { formatAccountCount, accountWord } from './utils/text';
 import { buildRegionPortfolioDistribution } from './utils/regionMetrics';
 import { format, parseISO } from 'date-fns';
 import './App.css';
@@ -574,7 +575,7 @@ function DashboardApp({ dataset }) {
           <div>
             <AppTitle />
             <p className="header__subtitle">
-              {tams.length} TAMs · {accounts.length} Sinch messaging accounts · SMS, 10DLC, Conversation API
+              {tams.length} TAMs · {formatAccountCount(accounts.length)} · SMS, 10DLC, Conversation API
             </p>
           </div>
         </div>
@@ -709,15 +710,15 @@ function DashboardApp({ dataset }) {
                       className="filter-banner__back"
                       onClick={handleBackToAtRiskDrilldown}
                     >
-                      ← Back to at-risk accounts
+                      ← Back to at-risk Accounts
                     </button>
                   )}
                   <span className="filter-banner__label">
-                    Showing {atRiskAccounts.length} at-risk accounts · sorted by highest risk
+                    Showing {atRiskAccounts.length} at-risk {accountWord(atRiskAccounts.length)} · sorted by highest risk
                   </span>
                 </div>
                 <button type="button" className="filter-banner__secondary" onClick={clearAccountsViewFilter}>
-                  Show all accounts
+                  Show all Accounts
                 </button>
               </div>
             )}
@@ -749,7 +750,7 @@ function DashboardApp({ dataset }) {
                       className="filter-banner__back"
                       onClick={handleBackToAtRiskDrilldown}
                     >
-                      ← Back to at-risk accounts
+                      ← Back to at-risk Accounts
                     </button>
                   )}
                   {attentionReturnPending && (
@@ -780,10 +781,10 @@ function DashboardApp({ dataset }) {
                       <>Aging open tickets — {getAgingThresholdLabel(agingThresholdId).toLowerCase()}+</>
                     )}
                     {operationalFilter === 'at-risk-attention' && (
-                      <>Tickets needing attention from {atRiskAccounts.length} at-risk accounts</>
+                      <>Tickets needing attention from {atRiskAccounts.length} at-risk {accountWord(atRiskAccounts.length)}</>
                     )}
                     {operationalFilter === 'at-risk' && (
-                      <>All tickets from {atRiskAccounts.length} at-risk accounts</>
+                      <>All tickets from {atRiskAccounts.length} at-risk {accountWord(atRiskAccounts.length)}</>
                     )}
                     {regionReturnPending && filters.region && !operationalFilter && !attentionOnly && !ticketKpiFilter && (
                       <>Tickets in {filters.region} region</>
@@ -906,7 +907,7 @@ function DashboardApp({ dataset }) {
 
       <footer className="footer">
         <p>
-          {allTickets.length.toLocaleString()} tickets · {tams.length} TAMs · {accounts.length} accounts
+          {allTickets.length.toLocaleString()} tickets · {tams.length} TAMs · {formatAccountCount(accounts.length)}
           · Data from {format(new Date(meta.date_range.start), 'MMM yyyy')} – {format(new Date(meta.date_range.end), 'MMM yyyy')}
         </p>
       </footer>

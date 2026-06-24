@@ -4,6 +4,7 @@ import { formatDurationHours, csatIndicator } from '../utils/metrics';
 import { computeHealthScore, healthIndicator } from '../utils/health';
 import { getTamAvailabilityStatus, normalizeTamRegion } from '../utils/tamStatus';
 import { resolveTamAvailability } from '../utils/tamAvailability';
+import { formatAccountCount } from '../utils/text';
 
 const DISPOSITION_LABELS = {
   in_progress: 'In Progress (IP)',
@@ -64,7 +65,7 @@ export default function TamDirectory({ tams, tamMetrics, referenceDate, onFilter
                   {status !== 'online' && <TamStatusIcon status={status} />}
                 </span>
                 <span className="tam-directory__item-meta">
-                  {tam.accounts?.length ?? 0} account{(tam.accounts?.length ?? 0) !== 1 ? 's' : ''} · {tam.metrics.totalTickets} tix
+                  {formatAccountCount(tam.accounts?.length ?? 0)} · {tam.metrics.totalTickets} tix
                 </span>
                 <span className="tam-directory__item-health" style={{ color: hi.color }}>
                   {h ?? '—'}

@@ -142,7 +142,7 @@ export default function SlaBreachChart({ accountData, timeSeries, onDrilldown, e
       <div className={`panel__chart sla-breach-panel__chart ${embedded ? 'panel__chart--compact' : ''}`}>
         <h3 className="panel__chart-title sla-breach-panel__chart-title">
           <span className="sla-breach-panel__swatch" aria-hidden="true" />
-          Breaches by account
+          Breaches by Account
           <span className="sla-breach-panel__chart-note">Top {TOP_ACCOUNT_LIMIT}</span>
         </h3>
         <ResponsiveContainer width="100%" height={barHeight}>

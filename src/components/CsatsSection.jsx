@@ -85,7 +85,7 @@ export default function CsatsSection({
       </div>
 
       <div className="csat-list">
-        <h3 className="panel__chart-title">By account ({accountRanked.length})</h3>
+        <h3 className="panel__chart-title">By Account ({accountRanked.length})</h3>
         {accountRanked.length === 0 ? (
           <p className="muted">No CSAT responses in this period.</p>
         ) : (

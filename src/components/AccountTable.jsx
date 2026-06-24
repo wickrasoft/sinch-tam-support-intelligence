@@ -72,7 +72,7 @@ export default function AccountTable({
       <article className="panel panel--wide">
         <header className="panel__header">
           <h2>{atRiskOnly ? 'At-Risk Account Matrix' : 'Account Detail Matrix'}</h2>
-          <p>No accounts match the current filters</p>
+          <p>No Accounts match the current filters</p>
         </header>
         <div className="empty-state">Try widening the date range or clearing filters.</div>
       </article>
@@ -84,7 +84,7 @@ export default function AccountTable({
       <header className="panel__header">
         <h2>
           {atRiskOnly
-            ? 'At-Risk Account Matrix - Flagged accounts sorted by highest risk'
+            ? 'At-Risk Account Matrix - Flagged Accounts sorted by highest risk'
             : 'Account Detail Matrix'}
         </h2>
       </header>

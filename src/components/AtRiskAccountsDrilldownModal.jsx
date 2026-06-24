@@ -54,7 +54,7 @@ export default function AtRiskAccountsDrilldownModal({
             <div className="kpi-drill__stat-grid">
               <div className="kpi-drill__mini-stat">
                 <span className="kpi-drill__mini-value">{atRiskAccounts.length}</span>
-                <span className="kpi-drill__mini-label">At-risk accounts</span>
+                <span className="kpi-drill__mini-label">At-risk Accounts</span>
               </div>
               <div className="kpi-drill__mini-stat">
                 <span className="kpi-drill__mini-value">{avgHealth}</span>
@@ -72,7 +72,7 @@ export default function AtRiskAccountsDrilldownModal({
           </section>
 
           <section className="kpi-drill__section at-risk-drill-modal__list-section">
-            <h3>All accounts ({atRiskAccounts.length})</h3>
+            <h3>All Accounts ({atRiskAccounts.length})</h3>
             <div className="at-risk-drill-modal__list">
               {atRiskAccounts.map((account, index) => (
                 <AtRiskAccountCard
