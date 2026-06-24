@@ -10,7 +10,7 @@ import { dirname, join } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const TAMS = [
-  { id: 'tam-001', name: 'Kalum Wickramatunga', email: 'kalum.wickramatunga@sinch.com', region: 'EMEA' },
+  { id: 'tam-001', name: 'Kalum W.', email: 'kalum.wickramatunga@sinch.com', region: 'EMEA' },
   { id: 'tam-002', name: 'Marcus Rivera', email: 'marcus.rivera@sinch.com', region: 'US' },
   { id: 'tam-003', name: 'Priya Patel', email: 'priya.patel@sinch.com', region: 'EMEA' },
   { id: 'tam-004', name: 'James Okonkwo', email: 'james.okonkwo@sinch.com', region: 'APAC' },

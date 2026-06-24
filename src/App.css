@@ -3218,11 +3218,23 @@ body {
 
 .tam-card__meta-row {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.35rem 0.6rem;
+  align-items: center;
+  gap: 0.45rem;
   margin-top: 0.2rem;
-  padding-right: 5.5rem;
+  padding-right: 9.5rem;
+  min-width: 0;
+}
+
+.tam-card__meta-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tam-card__title-row {
@@ -3234,9 +3246,9 @@ body {
 
 .tam-card__corner {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.3rem;
   flex-shrink: 0;
 }
 
@@ -3244,7 +3256,8 @@ body {
   font-size: 0.68rem;
   color: var(--text-muted);
   line-height: 1;
-  padding: 0.05rem 0.1rem 0;
+  padding: 0.35rem 0.05rem 0 0;
+  flex-shrink: 0;
 }
 
 .tam-card__online-badge {
@@ -3359,6 +3372,22 @@ body {
 .tam-card__badge--total .tam-card__badge-label,
 .tam-card__badge--total .tam-card__badge-value {
   color: var(--accent);
+}
+
+.tam-card__badge--accounts {
+  width: 2.6rem;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.32);
+}
+
+.tam-card__badge--accounts .tam-card__badge-label {
+  font-size: 0.4rem;
+  letter-spacing: 0.02em;
+}
+
+.tam-card__badge--accounts .tam-card__badge-label,
+.tam-card__badge--accounts .tam-card__badge-value {
+  color: var(--purple);
 }
 
 .tam-card__badge--csat {
@@ -3531,22 +3560,6 @@ body {
 
 .tam-overview-online .ops-panel__count {
   font-size: 1.5rem;
-}
-
-.tam-card__accounts-count {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  display: block;
-  margin: 0;
-}
-
-.tam-card__availability-detail {
-  display: block;
-  font-size: 0.74rem;
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.3;
 }
 
 .tam-card__stats--portfolio {
@@ -4858,7 +4871,7 @@ body {
     padding-right: 0;
   }
 
-  .tam-card__availability-detail {
+  .tam-card__meta-text {
     font-size: 0.76rem;
   }
 }

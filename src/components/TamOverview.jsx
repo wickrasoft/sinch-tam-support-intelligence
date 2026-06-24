@@ -99,6 +99,20 @@ function getPortfolioStatValue(key, metrics) {
   return breakdown[key] ?? 0;
 }
 
+function TamCardAccountsBadge({ count }) {
+  const value = Number(count) || 0;
+
+  return (
+    <span
+      className="tam-card__badge tam-card__badge--accounts"
+      title={formatAccountCount(value)}
+    >
+      <span className="tam-card__badge-label">Accounts</span>
+      <span className="tam-card__badge-value">{value}</span>
+    </span>
+  );
+}
+
 function TamCardCsatBadge({ avgCsat, tamId, onDrilldown }) {
   const csat = csatIndicator(avgCsat);
   const value = avgCsat?.toFixed(1) ?? '—';
@@ -554,8 +568,8 @@ export default function TamOverview({
                       </span>
                     </h3>
                     <div className="tam-card__corner">
-                      <span className="tam-card__chevron" aria-hidden="true">{expanded ? '▲' : '▼'}</span>
                       <div className="tam-card__badge-group">
+                        <TamCardAccountsBadge count={tam.accounts?.length ?? 0} />
                         <button
                           type="button"
                           className="tam-card__badge tam-card__badge--total tam-card__badge--clickable"
@@ -574,18 +588,16 @@ export default function TamOverview({
                           onDrilldown={onDrilldown}
                         />
                       </div>
+                      <span className="tam-card__chevron" aria-hidden="true">{expanded ? '▲' : '▼'}</span>
                     </div>
                   </div>
-                  <div className="tam-card__meta-row">
-                    <span className="tam-card__accounts-count">
-                      {formatAccountCount(tam.accounts?.length ?? 0)}
-                    </span>
-                    {availabilityDetails.length > 0 && (
-                      <span className="tam-card__availability-detail">
+                  {availabilityDetails.length > 0 && (
+                    <div className="tam-card__meta-row">
+                      <span className="tam-card__meta-text">
                         {availabilityDetails.join(' · ')}
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
                 <PortfolioStatCells
                   metrics={tam.metrics}
