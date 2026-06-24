@@ -92,10 +92,38 @@ function getPortfolioStatValue(key, metrics) {
   return breakdown[key] ?? 0;
 }
 
+function TamCardCsatBadge({ avgCsat, tamId, onDrilldown }) {
+  const csat = csatIndicator(avgCsat);
+  const value = avgCsat?.toFixed(1) ?? '—';
+
+  const openDrilldown = (event) => {
+    event.stopPropagation();
+    onDrilldown?.(KPI_KEYS.CSAT, tamId ? { tamId } : undefined);
+  };
+
+  if (onDrilldown) {
+    return (
+      <button
+        type="button"
+        className="tam-card__csat tam-card__csat--clickable"
+        title="Average CSAT for ratings in period — click to drill down"
+        onClick={openDrilldown}
+      >
+        <span className="tam-card__csat-label">CSAT</span>
+        <span className="tam-card__csat-value" style={{ color: csat.color }}>{value}</span>
+      </button>
+    );
+  }
+
+  return (
+    <span className="tam-card__csat">
+      <span className="tam-card__csat-label">CSAT</span>
+      <span className="tam-card__csat-value" style={{ color: csat.color }}>{value}</span>
+    </span>
+  );
+}
+
 function PortfolioStatCells({ metrics, onDrilldown, tamId }) {
-  const csat = csatIndicator(metrics.avgCsat);
-  const row1 = PORTFOLIO_STAT_ITEMS.slice(0, 5);
-  const row2 = PORTFOLIO_STAT_ITEMS.slice(5);
   const drillContext = tamId ? { tamId } : undefined;
 
   const openDrilldown = (kpiKey, event) => {
@@ -115,20 +143,8 @@ function PortfolioStatCells({ metrics, onDrilldown, tamId }) {
   );
 
   return (
-    <div className="tam-card__stats-rows">
-      <div className="tam-card__stats tam-card__stats--compact tam-card__stats--row-1">
-        {row1.map(renderStat)}
-      </div>
-      <div className="tam-card__stats tam-card__stats--compact tam-card__stats--row-2">
-        {row2.map(renderStat)}
-        <TamStatCell
-          label="CSAT"
-          value={metrics.avgCsat?.toFixed(1) ?? '—'}
-          title="Average CSAT for ratings in period — click to drill down"
-          valueStyle={{ color: csat.color }}
-          onClick={onDrilldown ? (e) => openDrilldown(KPI_KEYS.CSAT, e) : undefined}
-        />
-      </div>
+    <div className="tam-card__stats tam-card__stats--compact tam-card__stats--portfolio">
+      {PORTFOLIO_STAT_ITEMS.map(renderStat)}
     </div>
   );
 }
@@ -525,6 +541,11 @@ export default function TamOverview({
                         <span className="tam-card__total-label">Total</span>
                         <span className="tam-card__total-handled">{activityTotal}</span>
                       </button>
+                      <TamCardCsatBadge
+                        avgCsat={tam.metrics.avgCsat}
+                        tamId={tam.tam_id}
+                        onDrilldown={onDrilldown}
+                      />
                       <span className="tam-card__name">{tam.tam_name}</span>
                     </h3>
                     <div className="tam-card__corner">
