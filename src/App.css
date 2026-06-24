@@ -3380,11 +3380,6 @@ body {
   border: 1px solid rgba(139, 92, 246, 0.32);
 }
 
-.tam-card__badge--accounts .tam-card__badge-label {
-  font-size: 0.4rem;
-  letter-spacing: 0.02em;
-}
-
 .tam-card__badge--accounts .tam-card__badge-label,
 .tam-card__badge--accounts .tam-card__badge-value {
   color: var(--purple);

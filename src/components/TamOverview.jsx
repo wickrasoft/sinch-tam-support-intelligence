@@ -107,7 +107,7 @@ function TamCardAccountsBadge({ count }) {
       className="tam-card__badge tam-card__badge--accounts"
       title={formatAccountCount(value)}
     >
-      <span className="tam-card__badge-label">Accounts</span>
+      <span className="tam-card__badge-label">Accts</span>
       <span className="tam-card__badge-value">{value}</span>
     </span>
   );
