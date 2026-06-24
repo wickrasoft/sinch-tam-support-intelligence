@@ -173,17 +173,7 @@ function DashboardApp({ dataset }) {
       return filteredTickets.filter((t) => t.needs_attention);
     }
     return filteredTickets;
-  }, [filteredTickets, allTickets, activeFilters, operationalTickets, attentionOnly, ticketKpiFilter, operationalFilter, staleThresholdId, agingThresholdId, atRiskAccounts]);
-
-  const filtersWithoutRegion = useMemo(
-    () => ({ ...activeFilters, region: '' }),
-    [activeFilters],
-  );
-
-  const ticketsForRegionChart = useMemo(
-    () => filterTickets(allTickets, filtersWithoutRegion, { tams }),
-    [allTickets, filtersWithoutRegion, tams],
-  );
+  }, [filteredTickets, allTickets, activeFilters, operationalTickets, attentionOnly, ticketKpiFilter, operationalFilter, staleThresholdId, agingThresholdId, atRiskAccounts, accounts, filters, tams]);
 
   const tamMetrics = useMemo(
     () => groupByTam(filteredTickets, allTickets, activeFilters, accounts, tams),
@@ -191,8 +181,8 @@ function DashboardApp({ dataset }) {
   );
 
   const regionChartTamMetrics = useMemo(
-    () => groupByTam(ticketsForRegionChart, allTickets, filtersWithoutRegion, accounts, tams),
-    [ticketsForRegionChart, allTickets, filtersWithoutRegion, accounts, tams],
+    () => groupByTam(filteredTickets, allTickets, activeFilters, accounts, tams),
+    [filteredTickets, allTickets, activeFilters, accounts, tams],
   );
 
   const regionDistribution = useMemo(
@@ -815,7 +805,13 @@ function DashboardApp({ dataset }) {
                   </span>
                 </div>
                 <div className="filter-banner__actions">
-                  {(operationalFilter === 'stale' || operationalFilter === 'aging') && (
+                  {operationalFilter === 'stale' && (
+                    <RegionFilterChips
+                      value={filters.region ?? ''}
+                      onChange={handleRegionFilterChange}
+                    />
+                  )}
+                  {operationalFilter === 'aging' && (
                     <RegionFilterChips
                       value={filters.region ?? ''}
                       onChange={handleRegionFilterChange}
