@@ -3162,11 +3162,20 @@ body {
   min-width: 0;
 }
 
+.tam-card__name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 0.15rem;
+}
+
 .tam-card__badge-group {
   display: inline-flex;
   align-items: stretch;
   gap: 0.3rem;
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
 .tam-card__badge {
@@ -3377,14 +3386,6 @@ body {
 
 .tam-overview-online .ops-panel__count {
   font-size: 1.5rem;
-}
-
-.tam-card__name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding-right: 0.25rem;
 }
 
 .tam-card__accounts-count {

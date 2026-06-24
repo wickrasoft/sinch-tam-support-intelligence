@@ -530,6 +530,7 @@ export default function TamOverview({
                 <div className="tam-card__head">
                   <div className="tam-card__title-row">
                     <h3>
+                      <span className="tam-card__name">{tam.tam_name}</span>
                       <div className="tam-card__badge-group">
                         <button
                           type="button"
@@ -549,7 +550,6 @@ export default function TamOverview({
                           onDrilldown={onDrilldown}
                         />
                       </div>
-                      <span className="tam-card__name">{tam.tam_name}</span>
                     </h3>
                     <div className="tam-card__corner">
                       {tamMeta && (
