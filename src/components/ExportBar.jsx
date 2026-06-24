@@ -12,23 +12,29 @@ export default function ExportBar({
   tams,
 }) {
   const stamp = format(new Date(), 'yyyy-MM-dd');
+  const reportParams = {
+    periodLabel,
+    filters,
+    summary,
+    comparison,
+    accountMetrics,
+    atRiskAccounts,
+    tams,
+  };
 
   const exportCsv = () => {
     const csv = ticketsToCsv(filteredTickets);
     downloadFile(csv, `tam-tickets-${stamp}.csv`, 'text/csv');
   };
 
-  const exportReport = () => {
-    const md = buildMarkdownReport({
-      periodLabel,
-      filters,
-      summary,
-      comparison,
-      accountMetrics,
-      atRiskAccounts,
-      tams,
-    });
+  const exportMarkdownReport = () => {
+    const md = buildMarkdownReport(reportParams);
     downloadFile(md, `tam-support-report-${stamp}.md`, 'text/markdown');
+  };
+
+  const exportPdfReport = async () => {
+    const { downloadPdfReport } = await import('../utils/reportExport');
+    downloadPdfReport(reportParams, `tam-support-report-${stamp}.pdf`);
   };
 
   return (
@@ -38,9 +44,13 @@ export default function ExportBar({
         Download CSV
         <span className="export-bar__hint">{filteredTickets.length} tickets</span>
       </button>
-      <button type="button" className="export-bar__btn export-bar__btn--primary" onClick={exportReport}>
+      <button type="button" className="export-bar__btn export-bar__btn--primary" onClick={exportMarkdownReport}>
         Download Report
         <span className="export-bar__hint">Markdown · QBR-ready</span>
+      </button>
+      <button type="button" className="export-bar__btn export-bar__btn--primary" onClick={exportPdfReport}>
+        Download PDF
+        <span className="export-bar__hint">PDF · QBR-ready</span>
       </button>
     </div>
   );

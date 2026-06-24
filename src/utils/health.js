@@ -240,7 +240,7 @@ export function ticketsToCsv(tickets) {
   return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
 }
 
-export function buildMarkdownReport({
+export function buildReportSnapshot({
   periodLabel,
   filters,
   summary,
@@ -252,33 +252,81 @@ export function buildMarkdownReport({
   const tamName = filters.tamId
     ? tams.find((t) => t.id === filters.tamId)?.name
     : 'All TAMs';
+  const regionName = filters.region || 'All Regions';
   const csat = csatIndicator(summary.avgCsat, summary.csatPct);
 
-  let md = `# TAM Support Report\n\n`;
-  md += `**Period:** ${periodLabel}  \n`;
-  md += `**TAM:** ${tamName}  \n`;
-  md += `**Generated:** ${format(new Date(), 'MMM d, yyyy HH:mm')}\n\n`;
+  return {
+    title: 'TAM Support Report',
+    periodLabel,
+    tamName,
+    regionName,
+    generatedAt: format(new Date(), 'MMM d, yyyy HH:mm'),
+    summaryRows: [
+      { metric: 'Total Tickets', value: String(summary.totalTickets), delta: formatDelta(comparison.totalTickets).text },
+      { metric: 'P1 Tickets', value: String(summary.p1Count), delta: formatDelta(comparison.p1Count).text },
+      { metric: 'P2 Tickets', value: String(summary.p2Count), delta: formatDelta(comparison.p2Count).text },
+      {
+        metric: 'SLA Breaches',
+        value: `${summary.slaBreaches} (${summary.slaBreachRate.toFixed(1)}%)`,
+        delta: formatDelta(comparison.slaBreaches).text,
+      },
+      {
+        metric: 'CSAT',
+        value: `${summary.avgCsat?.toFixed(1) ?? 'N/A'} (${csat.label})`,
+        delta: formatDelta(comparison.avgCsat).text,
+      },
+      { metric: 'MTTA', value: formatDurationHours(summary.avgMtta), delta: formatDurationDelta(comparison.avgMtta).text },
+      { metric: 'MTTR', value: formatDurationHours(summary.avgMttr), delta: formatDurationDelta(comparison.avgMttr).text },
+      { metric: 'Reopenings', value: String(summary.reopenings), delta: formatDelta(comparison.reopenings).text },
+    ],
+    atRiskAccounts: atRiskAccounts.map((account) => ({
+      accountName: account.account_name,
+      health: `${account.healthScore}/100`,
+      tamName: account.tam_name,
+      slaRate: `${account.metrics.slaBreachRate.toFixed(1)}%`,
+      csat: account.metrics.avgCsat?.toFixed(1) ?? 'N/A',
+      p1p2: String(account.metrics.p1p2Count),
+      reopenings: String(account.metrics.reopenings),
+    })),
+    accountRows: accountMetrics.map((account) => [
+      account.account_name,
+      account.healthScore != null ? String(account.healthScore) : '—',
+      String(account.metrics.totalTickets),
+      String(account.metrics.p1Count),
+      String(account.metrics.p2Count),
+      `${account.metrics.slaBreachRate.toFixed(1)}%`,
+      account.metrics.avgCsat?.toFixed(1) ?? '—',
+      formatDurationHours(account.metrics.avgMttr),
+    ]),
+    footer: 'Report generated from TAM Support Intelligence Dashboard (synthetic Zendesk data)',
+  };
+}
+
+export function buildMarkdownReport(params) {
+  const snapshot = buildReportSnapshot(params);
+
+  let md = `# ${snapshot.title}\n\n`;
+  md += `**Period:** ${snapshot.periodLabel}  \n`;
+  md += `**Region:** ${snapshot.regionName}  \n`;
+  md += `**TAM:** ${snapshot.tamName}  \n`;
+  md += `**Generated:** ${snapshot.generatedAt}\n\n`;
 
   md += `## Executive Summary\n\n`;
   md += `| Metric | Value | vs Prior Period |\n`;
   md += `|--------|-------|------------------|\n`;
-  md += `| Total Tickets | ${summary.totalTickets} | ${formatDelta(comparison.totalTickets).text} |\n`;
-  md += `| P1 Tickets | ${summary.p1Count} | ${formatDelta(comparison.p1Count).text} |\n`;
-  md += `| P2 Tickets | ${summary.p2Count} | ${formatDelta(comparison.p2Count).text} |\n`;
-  md += `| SLA Breaches | ${summary.slaBreaches} (${summary.slaBreachRate.toFixed(1)}%) | ${formatDelta(comparison.slaBreaches).text} |\n`;
-  md += `| CSAT | ${summary.avgCsat?.toFixed(1) ?? 'N/A'} (${csat.label}) | ${formatDelta(comparison.avgCsat).text} |\n`;
-  md += `| MTTA | ${formatDurationHours(summary.avgMtta)} | ${formatDurationDelta(comparison.avgMtta).text} |\n`;
-  md += `| MTTR | ${formatDurationHours(summary.avgMttr)} | ${formatDurationDelta(comparison.avgMttr).text} |\n`;
-  md += `| Reopenings | ${summary.reopenings} | ${formatDelta(comparison.reopenings).text} |\n\n`;
+  for (const row of snapshot.summaryRows) {
+    md += `| ${row.metric} | ${row.value} | ${row.delta} |\n`;
+  }
+  md += '\n';
 
-  if (atRiskAccounts.length) {
-    md += `## Accounts Requiring Attention (${atRiskAccounts.length})\n\n`;
-    for (const a of atRiskAccounts) {
-      md += `### ${a.account_name} — Health ${a.healthScore}/100\n`;
-      md += `- TAM: ${a.tam_name}\n`;
-      md += `- SLA breach rate: ${a.metrics.slaBreachRate.toFixed(1)}%\n`;
-      md += `- CSAT: ${a.metrics.avgCsat?.toFixed(1) ?? 'N/A'}\n`;
-      md += `- P1/P2: ${a.metrics.p1p2Count} | Reopenings: ${a.metrics.reopenings}\n\n`;
+  if (snapshot.atRiskAccounts.length) {
+    md += `## Accounts Requiring Attention (${snapshot.atRiskAccounts.length})\n\n`;
+    for (const account of snapshot.atRiskAccounts) {
+      md += `### ${account.accountName} — Health ${account.health}\n`;
+      md += `- TAM: ${account.tamName}\n`;
+      md += `- SLA breach rate: ${account.slaRate}\n`;
+      md += `- CSAT: ${account.csat}\n`;
+      md += `- P1/P2: ${account.p1p2} | Reopenings: ${account.reopenings}\n\n`;
     }
   }
 
@@ -286,11 +334,11 @@ export function buildMarkdownReport({
   md += `| Account | Health | Tickets | P1 | P2 | SLA % | CSAT | MTTR |\n`;
   md += `|---------|--------|---------|----|----|-------|------|------|\n`;
 
-  for (const a of accountMetrics) {
-    md += `| ${a.account_name} | ${a.healthScore ?? '—'} | ${a.metrics.totalTickets} | ${a.metrics.p1Count} | ${a.metrics.p2Count} | ${a.metrics.slaBreachRate.toFixed(1)}% | ${a.metrics.avgCsat?.toFixed(1) ?? '—'} | ${formatDurationHours(a.metrics.avgMttr)} |\n`;
+  for (const row of snapshot.accountRows) {
+    md += `| ${row.join(' | ')} |\n`;
   }
 
-  md += `\n---\n*Report generated from TAM Support Intelligence Dashboard (synthetic Zendesk data)*\n`;
+  md += `\n---\n*${snapshot.footer}*\n`;
   return md;
 }
 
