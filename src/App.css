@@ -4165,23 +4165,33 @@ body {
 /* Stale / aging threshold chips (no dropdown) */
 .ops-threshold-chips {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.35rem;
   margin: 0 0 0.75rem;
   width: 100%;
+  justify-content: start;
+}
+
+.ops-threshold-chips--stale {
+  grid-template-columns: repeat(6, minmax(2.65rem, 3.15rem));
+}
+
+.ops-threshold-chips--aging {
+  grid-template-columns: repeat(4, minmax(2.65rem, 3.15rem));
 }
 
 .stale-threshold-chip {
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  padding: 0.3rem 0.35rem;
+  padding: 0.28rem 0.35rem;
   border-radius: 8px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   cursor: pointer;
   width: 100%;
+  max-width: 3.15rem;
   min-width: 0;
+  min-height: 1.85rem;
   text-align: center;
   line-height: 1.2;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
@@ -4202,18 +4212,23 @@ body {
   margin-bottom: 0;
   width: 100%;
   min-width: 0;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(2.5rem, 3rem));
 }
 
 .filter-banner .stale-threshold-chip {
-  padding: 0.2rem 0.4rem;
-  font-size: 0.65rem;
+  padding: 0.2rem 0.35rem;
+  font-size: 0.62rem;
+  max-width: 3rem;
+  min-height: 1.75rem;
 }
 
 @media (max-width: 1024px) {
-  .ops-threshold-chips,
-  .filter-banner .ops-threshold-chips {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .ops-threshold-chips--stale {
+    grid-template-columns: repeat(4, minmax(2.55rem, 3.1rem));
+  }
+
+  .ops-threshold-chips--aging {
+    grid-template-columns: repeat(4, minmax(2.55rem, 3.1rem));
   }
 }
 
@@ -4539,15 +4554,21 @@ body {
     font-size: 0.95rem;
   }
 
-  .ops-threshold-chips {
+  .ops-threshold-chips--stale,
+  .ops-threshold-chips--aging {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.35rem;
+    gap: 0.3rem;
+  }
+
+  .filter-banner .ops-threshold-chips {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .stale-threshold-chip {
-    padding: 0.4rem 0.25rem;
-    font-size: 0.72rem;
-    min-height: 2rem;
+    max-width: none;
+    padding: 0.34rem 0.2rem;
+    font-size: 0.68rem;
+    min-height: 1.85rem;
   }
 
   .ops-ticket-item {
@@ -4649,16 +4670,17 @@ body {
     font-size: 0.54rem;
   }
 
-  .ops-threshold-chips,
+  .ops-threshold-chips--stale,
+  .ops-threshold-chips--aging,
   .filter-banner .ops-threshold-chips {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.3rem;
+    gap: 0.28rem;
   }
 
   .stale-threshold-chip {
-    padding: 0.38rem 0.2rem;
-    font-size: 0.68rem;
-    min-height: 1.9rem;
+    padding: 0.32rem 0.15rem;
+    font-size: 0.64rem;
+    min-height: 1.75rem;
   }
 
   .ops-panel__title-row h2 {

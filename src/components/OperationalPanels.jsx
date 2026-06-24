@@ -22,9 +22,13 @@ import {
   formatStaleDuration,
 } from '../utils/ticketOps';
 
-function ThresholdChips({ thresholds, value, onChange, ariaLabel }) {
+function ThresholdChips({ thresholds, value, onChange, ariaLabel, variant }) {
   return (
-    <div className="ops-threshold-chips" role="group" aria-label={ariaLabel}>
+    <div
+      className={`ops-threshold-chips${variant ? ` ops-threshold-chips--${variant}` : ''}`}
+      role="group"
+      aria-label={ariaLabel}
+    >
       {thresholds.map((t) => (
         <button
           key={t.id}
@@ -44,6 +48,7 @@ export function StaleThresholdChips(props) {
     <ThresholdChips
       thresholds={STALE_THRESHOLDS}
       ariaLabel="Stale ticket threshold"
+      variant="stale"
       {...props}
     />
   );
@@ -54,6 +59,7 @@ export function AgingThresholdChips(props) {
     <ThresholdChips
       thresholds={AGING_THRESHOLDS}
       ariaLabel="Aging ticket threshold"
+      variant="aging"
       {...props}
     />
   );
