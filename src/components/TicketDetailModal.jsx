@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { formatDuration, formatDurationHours, getTicketMttaMinutes, getTicketMttrMinutes } from '../utils/metrics';
 import { getZendeskTicketUrl } from '../utils/zendesk';
@@ -73,15 +73,22 @@ function ConversationEvent({ at, text }) {
   );
 }
 
-function JiraAppPanel({ zd, ticket }) {
-  const jira = zd.jira;
-  const hasLink = Boolean(jira?.key ?? zd.jira_key);
+function JiraAppPanel({ ticket }) {
+  const incident = ticket.incident ?? null;
+  const issues = (ticket.team_links ?? []).map((link) => ({
+    key: link.key,
+    summary: link.summary ?? ticket.subject,
+    status: link.status,
+    team: link.team,
+  }));
+  const linkedCount = (incident ? 1 : 0) + issues.length;
 
   return (
     <div className="zd-app-panel zd-app-panel--jira">
       <header className="zd-app-panel__header">
         <span className="zd-app-panel__logo">◆</span>
         <strong>JIRA</strong>
+        {linkedCount > 0 && <span className="zd-app-panel__count">{linkedCount}</span>}
         <div className="zd-app-panel__actions">
           <button type="button" className="zd-app-icon" title="Refresh">↻</button>
           <button type="button" className="zd-app-icon" title="Pin">📌</button>
@@ -94,25 +101,36 @@ function JiraAppPanel({ zd, ticket }) {
         <button type="button" className="zd-app-btn zd-app-btn--disabled" disabled>Notify</button>
       </div>
       <div className="zd-app-panel__body">
-        {hasLink ? (
-          <div className="zd-jira-issue">
-            <a
-              href={jira?.url ?? `https://sinch.atlassian.net/browse/${zd.jira_key}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="zd-jira-issue__key"
-            >
-              {jira?.key ?? zd.jira_key}
-            </a>
-            <p className="zd-jira-issue__summary">{jira?.summary ?? ticket.subject}</p>
-            <div className="zd-jira-issue__meta">
-              <span className={`zd-jira-status zd-jira-status--${(jira?.status ?? zd.jira_ticket_status ?? '').replace(/\s+/g, '-').toLowerCase()}`}>
-                {jira?.status ?? zd.jira_ticket_status}
-              </span>
-              {jira?.priority && <span>{jira.priority}</span>}
-              {jira?.assignee && <span>{jira.assignee}</span>}
-            </div>
-          </div>
+        {linkedCount > 0 ? (
+          <>
+            {incident && (
+              <div className="zd-jira-issue zd-jira-issue--incident" key={incident.key}>
+                <span className="zd-jira-issue__key">
+                  {incident.key}
+                  <span className="zd-jira-issue__sev">{incident.severity}</span>
+                </span>
+                <p className="zd-jira-issue__summary">{incident.summary}</p>
+                <div className="zd-jira-issue__meta">
+                  <span className={`zd-jira-status zd-jira-status--${(incident.status ?? '').replace(/\s+/g, '-').toLowerCase()}`}>
+                    {incident.status}
+                  </span>
+                  <span className="zd-jira-issue__team">Incident</span>
+                </div>
+              </div>
+            )}
+            {issues.map((issue) => (
+              <div className="zd-jira-issue" key={issue.key}>
+                <span className="zd-jira-issue__key">{issue.key}</span>
+                <p className="zd-jira-issue__summary">{issue.summary}</p>
+                <div className="zd-jira-issue__meta">
+                  <span className={`zd-jira-status zd-jira-status--${(issue.status ?? '').replace(/\s+/g, '-').toLowerCase()}`}>
+                    {issue.status}
+                  </span>
+                  {issue.team && <span className="zd-jira-issue__team">{issue.team}</span>}
+                </div>
+              </div>
+            ))}
+          </>
         ) : (
           <p className="zd-app-panel__empty">There are no linked issues.</p>
         )}
@@ -121,9 +139,7 @@ function JiraAppPanel({ zd, ticket }) {
   );
 }
 
-function MailThreadPanel({ zd, ticket, onScrollToConversation }) {
-  const mailUrl = zd.mail_thread_url ?? zd.url ?? getZendeskTicketUrl(ticket.zendesk_id);
-
+function MailThreadPanel({ ticket, onScrollToConversation }) {
   return (
     <div className="zd-app-panel zd-app-panel--mail">
       <header className="zd-app-panel__header">
@@ -137,38 +153,96 @@ function MailThreadPanel({ zd, ticket, onScrollToConversation }) {
         <button type="button" className="zd-app-btn zd-app-btn--full" onClick={onScrollToConversation}>
           View conversation
         </button>
-        <a href={mailUrl} target="_blank" rel="noopener noreferrer" className="zd-mail-thread__link">
+        <span className="zd-mail-thread__link zd-mail-thread__link--disabled">
           Open mail thread in Zendesk ↗
-        </a>
+        </span>
       </div>
     </div>
   );
 }
 
-function AppRail({ activeApp, onSelectApp }) {
-  const apps = [
-    { id: 'user', icon: '👤', label: 'Customer' },
-    { id: 'kb', icon: '📖', label: 'Knowledge' },
-    { id: 'mail', icon: '💬', label: 'Mail', badge: 1 },
-    { id: 'tags', icon: '🏷', label: 'Tags' },
-    { id: 'apps', icon: '⚙', label: 'Apps' },
-    { id: 'tasks', icon: '✓', label: 'Tasks' },
-    { id: 'grid', icon: '▦', label: 'More' },
-    { id: 'jira', icon: '◆', label: 'JIRA' },
-  ];
+function PlaceholderAppPanel({ icon, title }) {
+  return (
+    <div className="zd-app-panel zd-app-panel--placeholder">
+      <header className="zd-app-panel__header">
+        <span className="zd-app-panel__logo">{icon}</span>
+        <strong>{title}</strong>
+      </header>
+      <div className="zd-app-panel__body">
+        <p className="zd-app-panel__empty">No content to display in this demo.</p>
+      </div>
+    </div>
+  );
+}
 
+function CustomerAppPanel({ ticket }) {
+  const zd = ticket.zendesk ?? {};
+  const requester = zd.requester ?? ticket.requester ?? {};
+  return (
+    <div className="zd-app-panel zd-app-panel--customer">
+      <header className="zd-app-panel__header">
+        <span className="zd-app-panel__logo">👤</span>
+        <strong>Customer Context</strong>
+      </header>
+      <div className="zd-app-panel__body">
+        <div className="zd-requester-card zd-requester-card--compact">
+          <div className="zd-avatar zd-avatar--customer">{initials(requester.name)}</div>
+          <div>
+            <div className="zd-requester-card__name">{requester.name}</div>
+            <div className="zd-requester-card__email">{requester.email}</div>
+          </div>
+        </div>
+        <p className="zd-mail-thread__hint">{ticket.account_name} · {ticket.account_tier}</p>
+        <p className="zd-mail-thread__hint">{ticket.industry} · {zd.region ?? ticket.sinch?.region}</p>
+      </div>
+    </div>
+  );
+}
+
+const APP_RAIL_ITEMS = [
+  { id: 'user', icon: '👤', label: 'Customer' },
+  { id: 'kb', icon: '📖', label: 'Knowledge' },
+  { id: 'conversations', icon: '💬', label: 'Conversations', badge: 0 },
+  { id: 'mail', icon: '✉️', label: 'Mail', badge: 1, badgeType: 'alert' },
+  { id: 'macros', icon: '🖌', label: 'Macros' },
+  { id: 'tasks', icon: '☑', label: 'Tasks' },
+  { id: 'apps', icon: '▦', label: 'Apps' },
+  { id: 'jira', icon: '◆', label: 'JIRA', brand: true },
+];
+
+function AppRail({ activeApp, onSelectApp }) {
   return (
     <nav className="zd-app-rail" aria-label="Apps">
-      {apps.map((app) => (
+      {APP_RAIL_ITEMS.map((app) => (
         <button
           key={app.id}
           type="button"
-          className={`zd-app-rail__btn ${activeApp === app.id ? 'zd-app-rail__btn--active' : ''}`}
+          className={[
+            'zd-app-rail__btn',
+            app.brand ? 'zd-app-rail__btn--brand' : '',
+            activeApp === app.id ? 'zd-app-rail__btn--active' : '',
+          ].filter(Boolean).join(' ')}
           title={app.label}
+          aria-pressed={activeApp === app.id}
           onClick={() => onSelectApp?.(app.id)}
         >
-          <span>{app.icon}</span>
-          {app.badge != null && <span className="zd-app-rail__badge">{app.badge}</span>}
+          {app.id === 'jira' ? (
+            <img
+              src="/icons/jira.png"
+              alt="JIRA"
+              style={{ width: '24px', height: '24px', borderRadius: '5px', display: 'block' }}
+            />
+          ) : (
+            <span>{app.icon}</span>
+          )}
+          {app.badge != null && (
+            <span
+              className="zd-app-rail__badge"
+              style={{ background: app.badgeType === 'alert' ? '#e34935' : '#6b7785' }}
+            >
+              {app.badge}
+            </span>
+          )}
         </button>
       ))}
       <button type="button" className="zd-app-rail__btn zd-app-rail__btn--add" title="Add app">+</button>
@@ -184,6 +258,7 @@ export default function TicketDetailModal({
   onViewTickets,
 }) {
   const conversationRef = useRef(null);
+  const [activeApp, setActiveApp] = useState('jira');
   usePaneLayoutStorage();
 
   const leftPane = useHorizontalResize({
@@ -251,9 +326,9 @@ export default function TicketDetailModal({
             {ticket.is_stale && <span className="zd-sla-badge">No update 72h+</span>}
           </div>
           <div className="zd-toolbar__right">
-            <a href={zendeskUrl} target="_blank" rel="noopener noreferrer" className="zd-btn zd-btn--link">
+            <button type="button" className="zd-btn zd-btn--link" disabled title="Disabled in demo">
               Open in new tab ↗
-            </a>
+            </button>
             {onFilterPortfolio && (
               <button type="button" className="zd-btn zd-btn--secondary" onClick={() => onFilterPortfolio(ticket)}>
                 Filter portfolio →
@@ -328,6 +403,16 @@ export default function TicketDetailModal({
               <ZdInput
                 label="Linked tickets"
                 value={zd.linked_tickets?.map((lt) => `#${lt.zendesk_id}`).join(', ') ?? ''}
+                mono
+              />
+              <ZdInput
+                label="Linked team tickets (JIRA)"
+                value={(ticket.team_links ?? []).map((l) => `${l.key} (${l.team})`).join(', ')}
+                mono
+              />
+              <ZdInput
+                label="Incident ticket (INC)"
+                value={ticket.incident ? `${ticket.incident.key} · ${ticket.incident.severity} · ${ticket.incident.status}` : ''}
                 mono
               />
               <ZdSelect label="Case origin" value={zd.case_origin} options={FIELD_OPTIONS.case_origin} />
@@ -447,10 +532,17 @@ export default function TicketDetailModal({
           {/* Right pane — JIRA + mail thread apps */}
           <aside className="zd-apps-pane" style={{ width: rightPane.size, flexBasis: rightPane.size }}>
             <div className="zd-apps-pane__scroll">
-              <JiraAppPanel zd={zd} ticket={ticket} />
-              <MailThreadPanel zd={zd} ticket={ticket} onScrollToConversation={scrollToConversation} />
+              {activeApp === 'jira' && <JiraAppPanel ticket={ticket} />}
+              {(activeApp === 'mail' || activeApp === 'conversations') && (
+                <MailThreadPanel ticket={ticket} onScrollToConversation={scrollToConversation} />
+              )}
+              {activeApp === 'user' && <CustomerAppPanel ticket={ticket} />}
+              {activeApp === 'kb' && <PlaceholderAppPanel icon="📖" title="Knowledge Base" />}
+              {activeApp === 'macros' && <PlaceholderAppPanel icon="🖌" title="Macros" />}
+              {activeApp === 'tasks' && <PlaceholderAppPanel icon="☑" title="Tasks" />}
+              {activeApp === 'apps' && <PlaceholderAppPanel icon="▦" title="Apps" />}
             </div>
-            <AppRail activeApp="jira" />
+            <AppRail activeApp={activeApp} onSelectApp={setActiveApp} />
           </aside>
         </div>
       </div>

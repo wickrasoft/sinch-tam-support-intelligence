@@ -42,7 +42,7 @@ import {
   getAtRiskAccounts,
   buildComparisonSummary,
 } from './utils/health';
-import { getTicketsForKpi, getKpiFilterPatch, KPI_CONFIG } from './utils/kpiDrilldown';
+import { getTicketsForKpi, getKpiFilterPatch, KPI_CONFIG, KPI_KEYS } from './utils/kpiDrilldown';
 import { formatAccountCount, accountWord } from './utils/text';
 import { buildRegionPortfolioDistribution } from './utils/regionMetrics';
 import { format, parseISO } from 'date-fns';
@@ -65,6 +65,7 @@ function DashboardApp({ dataset }) {
   const [attentionReturnPending, setAttentionReturnPending] = useState(false);
   const [regionReturnPending, setRegionReturnPending] = useState(false);
   const [ticketKpiFilter, setTicketKpiFilter] = useState(null);
+  const [ticketTeamScope, setTicketTeamScope] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [filters, setFilters] = useState({
     tamId: '',
@@ -104,6 +105,10 @@ function DashboardApp({ dataset }) {
     () => getOperationalScope(allTickets, accounts, filters, tams),
     [allTickets, accounts, filters, tams],
   );
+
+  // Cross-team escalations follow the global filter bar (TAM, account, region,
+  // priority, and period) exactly like the other overview panels.
+  const teamLinkTickets = filteredTickets;
 
   const previousTickets = useMemo(
     () => filterTickets(allTickets, previousFilters, { tams }),
@@ -164,16 +169,18 @@ function DashboardApp({ dataset }) {
       return getAgingTicketsByThreshold(operationalTickets, activeFilters.referenceDate, agingThresholdId);
     }
     if (ticketKpiFilter) {
-      return getTicketsForKpi(filteredTickets, ticketKpiFilter, {
+      const base = ticketKpiFilter === KPI_KEYS.TEAM_LINKS ? teamLinkTickets : filteredTickets;
+      return getTicketsForKpi(base, ticketKpiFilter, {
         allTickets,
         filters: activeFilters,
+        team: ticketTeamScope,
       });
     }
     if (attentionOnly) {
       return filteredTickets.filter((t) => t.needs_attention);
     }
     return filteredTickets;
-  }, [filteredTickets, allTickets, activeFilters, operationalTickets, attentionOnly, ticketKpiFilter, operationalFilter, staleThresholdId, agingThresholdId, atRiskAccounts, accounts, filters, tams]);
+  }, [filteredTickets, allTickets, activeFilters, operationalTickets, attentionOnly, ticketKpiFilter, ticketTeamScope, teamLinkTickets, operationalFilter, staleThresholdId, agingThresholdId, atRiskAccounts, accounts, filters, tams]);
 
   const tamMetrics = useMemo(
     () => groupByTam(filteredTickets, allTickets, activeFilters, accounts, tams),
@@ -484,6 +491,7 @@ function DashboardApp({ dataset }) {
         : {}),
     }));
     setTicketKpiFilter(kpiFilter ?? kpiKey);
+    setTicketTeamScope(kpiKey === KPI_KEYS.TEAM_LINKS ? (drilldownContext?.team ?? null) : null);
     setAttentionOnly(false);
     setActiveKpiDrilldown(null);
     setDrilldownContext(null);
@@ -522,6 +530,7 @@ function DashboardApp({ dataset }) {
     setStaleThresholdId(DEFAULT_STALE_THRESHOLD_ID);
     setAgingThresholdId(DEFAULT_AGING_THRESHOLD_ID);
     setTicketKpiFilter(null);
+    setTicketTeamScope(null);
     setAccountsAtRiskOnly(false);
     setAtRiskReturnPending(false);
     setAttentionReturnPending(false);
@@ -628,9 +637,11 @@ function DashboardApp({ dataset }) {
             tams={tams}
             allTickets={allTickets}
             filteredTickets={filteredTickets}
+            teamLinkTickets={teamLinkTickets}
             accounts={accounts}
             filters={filters}
             referenceDate={activeFilters.referenceDate}
+            publicHolidays={meta.public_holidays}
             staleThresholdId={staleThresholdId}
             onStaleThresholdChange={setStaleThresholdId}
             agingThresholdId={agingThresholdId}
@@ -769,6 +780,7 @@ function DashboardApp({ dataset }) {
                   )}
                   <span className="filter-banner__label">
                     {ticketKpiFilter && KPI_CONFIG[ticketKpiFilter]?.title}
+                    {ticketKpiFilter === KPI_KEYS.TEAM_LINKS && ticketTeamScope ? ` — ${ticketTeamScope}` : ''}
                     {attentionOnly && 'Showing tickets needing attention only'}
                     {operationalFilter === 'stale' && (
                       <>

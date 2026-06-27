@@ -1,114 +1,182 @@
-# AI Tools & Prompts — Part B Build Notes
+# Part B — TAM Support Intelligence Dashboard
 
-## Tool Used
+## Submission summary
 
-**Cursor** (AI-assisted IDE) with Claude as the coding agent.
+**Tool built:** **TAM Support Intelligence** — a lightweight web dashboard for Technical Account Managers to monitor support health across dedicated enterprise accounts, spot operational risk early, and export QBR-ready summaries.
 
-## Initial Scoping Prompt
+**Why it’s relevant to TAM work:** TAMs need a single view of portfolio health (SLA, CSAT, P1/P2 volume, reopenings, stale/aging tickets) without waiting on Zendesk admin access or manual spreadsheet work. This tool turns ticket-level data into account health scores, at-risk alerts, regional portfolio views, and exportable service-review reports.
 
-> Build a Web App/Site to demonstrate P1/P2 Tickets per TAM Dedicated Accounts, SLA Breaches per Each Account, Customer Satisfaction Score Indicator, MTTA, MTTR, No of Reopening of Tickets for Each day/week/month/quarter/year. Extract data from Zendesk — since I don't have ZD admin access, generate suitable dummy ticket data. Should be able to filter these requirements and sufficient dashboards.
+**Repository:** [github.com/wickrasoft/sinch-tam-support-intelligence](https://github.com/wickrasoft/sinch-tam-support-intelligence)  
+**Deployed:** Vercel (auto-deploy from `main`)
 
-## Follow-up Prompts & Iterations
-
-1. **Architecture decision** — Agent proposed Vite + React + Recharts with a Node.js data generator script producing Zendesk-shaped JSON, avoiding any backend/API dependency for the demo.
-
-2. **Data realism** — Requested account-specific "risk profiles" so some accounts (e.g. Nexus Financial, LogiTrans) show higher SLA breach and reopen rates, making the dashboard useful for TAM storytelling in interviews.
-
-3. **Period filtering** — Clarified that reopening counts should be based on `reopen_events[].reopened_at` timestamps (not ticket creation date), so switching Day → Week → Month → Quarter → Year changes reopen metrics correctly.
-
-## Key Files Created
-
-| File | Purpose |
-|------|---------|
-| `scripts/generateData.js` | Seeded random generator for ~1,600 Zendesk-style tickets |
-| `src/data/tickets.json` | Generated dataset (8 accounts, 4 TAMs, 12-month range) |
-| `src/utils/metrics.js` | MTTA, MTTR, CSAT, SLA, reopening calculations + period bounds |
-| `src/components/*` | Dashboard panels, charts, filters, account matrix, ticket feed |
-| `src/App.jsx` | Main layout wiring filters → metrics → visualizations |
-
-## Prompting Tips That Worked
-
-- **Be specific about metrics** — naming MTTA/MTTR/CSAT/SLA explicitly led to correct field generation (`first_response_at`, `solved_at`, etc.).
-- **State the constraint upfront** — "no Zendesk admin" immediately redirected from API integration to realistic dummy data with a documented migration path.
-- **Request filter dimensions together** — listing TAM, account, priority, and time period in one prompt produced a cohesive filter bar rather than bolt-on filters later.
-
-## How to Regenerate Data
-
+**Run locally:**
 ```bash
-npm run generate-data
+npm install
+npm run dev          # http://localhost:5173
+npm run generate-data   # optional — regenerate synthetic dataset
 ```
-
-Uses seed `42` for reproducible results. Edit `ACCOUNT_PROFILES` in `scripts/generateData.js` to tune breach/CSAT/reopen rates per account.
-
-## Demo Suggestions for Interview
-
-1. Set period to **Month**, reference date **2026-06-22** — shows current month portfolio view.
-2. Filter to **Nexus Financial Group** — higher SLA breach rate, lower CSAT (at-risk account narrative).
-3. Switch period to **Quarter** — show reopening trend chart rescoping to quarterly buckets.
-4. Filter by **TAM: Sarah Chen** — demonstrate portfolio-level view across 2 accounts.
-5. Point to **Account Detail Matrix** and **Recent Tickets** table as drill-down evidence.
-
-## What Would Change With Real Zendesk Access
-
-- Replace `import dataset from './data/tickets.json'` with API fetch layer
-- Map Zendesk `urgent/high/normal/low` → P1/P2/P3/P4
-- Pull `reply_time_in_minutes` and `full_resolution_time_in_minutes` from Ticket Metrics API
-- Pull satisfaction ratings from `/api/v2/satisfaction_ratings.json`
-
-The dashboard components and metrics engine would remain unchanged.
 
 ---
 
-## Session Checkpoint — 22 Jun 2026 (end of day)
+## What the tool does
 
-Work saved in git. Resume with:
+### Core metrics (per account, TAM, and period)
+| Metric | Use for TAMs |
+|--------|----------------|
+| **P1 / P2 volume** | Escalation and incident load per portfolio |
+| **SLA breaches** | First-response and resolution compliance |
+| **CSAT** | Satisfaction trend and low-score follow-up |
+| **MTTA / MTTR** | Responsiveness and resolution speed |
+| **Reopenings** | Quality / stability signal (day → year buckets) |
+| **Account Health Score (0–100)** | Composite portfolio health at a glance |
+| **At-risk accounts** | Accounts needing proactive TAM attention |
 
-```bash
-cd "/Users/kalwic/dev/TAM Assignment"
-npm run dev          # http://localhost:5173
-```
+### Operational panels
+- **Stale tickets** — open tickets with no recent update (24h / 48h / 72h thresholds)
+- **Aging tickets** — unresolved tickets by age (7d / 14d / 30d+)
+- **Tickets needing attention** — disposition-based alert queue
+- **TAM portfolio overview** — per-TAM activity breakdown with drill-down
 
-### Dataset (current)
+### Filters (global — apply everywhere)
+- Period: Day / Week / Month / Quarter / Year
+- Reference date, Region (US / EMEA / APAC / LATAM), TAM, Account, Priority, Status
+- SLA breaches only
 
-- **15 TAMs**, **25 accounts**, **6,251 tickets** (Jan 2024 → Jun 2026)
-- Regenerate: `npm run generate-data` (seed `42`, includes Zendesk metric fields + realistic MTTA/MTTR)
+### Exports
+- **CSV** — filtered ticket list
+- **Markdown report** — QBR / service review summary
+- **PDF report** — same content, formatted for sharing
 
-### Features completed this session
+### Other features
+- Zendesk-style **ticket detail modal** (3-pane layout)
+- **Regional distribution** chart with drill-down
+- **Period-over-period** KPI deltas (▲/▼ vs prior period)
+- **Color themes** (Dark / Light / Sinch branding)
+- Synthetic dataset shaped like Zendesk exports (no live API required for demo)
 
-| Area | Notes |
-|------|-------|
-| **Ticket detail modal** | 3-pane Zendesk layout, resizable panes (`usePaneResize.jsx`) |
-| **Operational panels** | Stale / Aging tickets, TAM Availability with live status |
-| **Filters** | Disposition filter, TAM regions (US / EMEA / APAC / LATAM) |
-| **CSAT** | Period-based ratings (`rated_at`), full response list, drill-down |
-| **Reopenings** | Period-based counts + clickable drill-down |
-| **TAM Portfolio Overview** | Expandable cards, Total badge (number only), Created/Other/P1/P2/Resolved/Closed/IP/WFR/Esc stats, portfolio summary pills, Resolved/Closed drill-down |
-| **MTTA / MTTR** | Timestamp-driven; `ticket.zendesk.metrics` fields; ~10% open tickets pending first reply |
-| **Branding** | Official Sinch logo on yellow (`#FFDD00`) badge, Sinch favicon |
+### Dataset
+- **15 TAMs**, **25 accounts**, **~6,250 tickets** (Jan 2024 → Jun 2026)
+- Account-specific risk profiles (some accounts intentionally worse for demo storytelling)
+- Regenerate: `npm run generate-data` (seed `42`)
 
-### Key metric rules (TAM Portfolio)
+---
 
-- **Total** (badge): sum of Created + Other + P1/P2 + Resolved + Closed + IP + WFR + Esc in period (number only in UI)
-- **Created**: tickets created in period
-- **Other**: resolve / close / reopen activity in period on tickets *not* created in period
-- **P1/P2**: priority count among tickets created in period
-- **Resolved / Closed**: created in period AND solved/closed in same period
-- **IP / WFR / Esc**: open dispositions on tickets created in period
-- TAM cards sorted by `activityTotal`
+## AI tools used
 
-### Default demo settings
+**ChatGPT**, **Claude**, and **Microsoft Copilot** — used for different stages of the work:
 
-- Reference date: **2026-06-22**
-- Period: **Month**
-- Tabs: Overview → TAMs → Accounts → Tickets
+| Tool | How it was used |
+|------|-----------------|
+| **ChatGPT** | Initial scoping, architecture ideas, and rapid prototyping prompts |
+| **Claude** | Longer code generation, refactoring, and iterating on React components and data logic |
+| **Microsoft Copilot** | Polishing QBR narrative text in Word and structuring client-facing summaries |
 
-### Key files touched recently
+Workflow:
+1. Describe the TAM problem and required metrics in natural language (ChatGPT / Claude)
+2. AI proposes architecture, generates data + React components, iterates on UI/UX (Claude for code-heavy steps)
+3. Review in browser, refine with follow-up prompts
+4. Export and narrative polish in Word with Copilot where needed
+5. Push to GitHub → Vercel auto-deploy
 
-- `src/components/TamOverview.jsx` — TAM portfolio UI + Total badge
-- `src/utils/metrics.js` — `getPortfolioActivityBreakdown`, `getTicketsHandledBreakdown`, MTTA/MTTR helpers
-- `scripts/generateData.js` — Zendesk metrics, SLA/reply realism
-- `src/data/tickets.json` — regenerated dataset
-- `src/utils/kpiDrilldown.js` — RESOLVED / CLOSED KPI keys
-- `public/sinch-logo.svg` — black wordmark on yellow header wrap
-- `src/App.jsx` / `src/App.css` — header branding + TAM overview styles
+The full build loop combined these tools with normal code review and testing.
 
+---
+
+## Prompts used
+
+### 1. Initial scoping (kick-off)
+
+> Build a Web App/Site to demonstrate P1/P2 Tickets per TAM Dedicated Accounts, SLA Breaches per Each Account, Customer Satisfaction Score Indicator, MTTA, MTTR, No of Reopening of Tickets for Each day/week/month/quarter/year. Extract data from Zendesk — since I don't have ZD admin access, generate suitable dummy ticket data. Should be able to filter these requirements and sufficient dashboards.
+
+**Outcome:** Vite + React + Recharts SPA; `scripts/generateData.js` producing Zendesk-shaped JSON; filter bar + overview / accounts / tickets tabs.
+
+### 2. Data realism
+
+> Give accounts different risk profiles so some show higher SLA breach and reopen rates for TAM storytelling.
+
+**Outcome:** `ACCOUNT_PROFILES` in the generator — e.g. higher breach/lower CSAT on selected accounts for at-risk demos.
+
+### 3. Period semantics
+
+> Reopening counts should use `reopen_events[].reopened_at`, not ticket creation date, so Day → Week → Month → Quarter → Year changes reopen metrics correctly.
+
+**Outcome:** Period-aware reopen logic in `src/utils/metrics.js`.
+
+### 4. Operational TAM workflows
+
+> Add stale and aging ticket panels, TAM availability by region, tickets needing attention, and expandable TAM portfolio cards with drill-down.
+
+**Outcome:** `OperationalPanels.jsx`, `TamOverview.jsx`, `ticketOps.js`, availability helpers.
+
+### 5. QBR / service review output
+
+> Add export — Markdown report for QBR, then PDF export alongside it.
+
+**Outcome:** `ExportBar.jsx`, `health.js` (`buildMarkdownReport`), `reportExport.js` (jsPDF).
+
+### 6. Regional portfolio management
+
+> Add region filter in the top bar; regional distribution chart; region should apply everywhere on the dashboard.
+
+**Outcome:** `FilterBar` region dropdown, `RegionDistributionPanel`, global filter wiring across KPIs, charts, stale/aging, and exports.
+
+### 7. UI polish (representative follow-ups)
+
+- Mobile KPI cards 3 per row
+- Unified panel headers, chart bar sizing, alert panel alignment
+- Color scheme switcher (Dark / Light / Sinch)
+- Remove demo header clutter (subtitle + synthetic data badge)
+
+---
+
+## Prompting tips that worked
+
+1. **Name metrics explicitly** — MTTA, MTTR, CSAT, SLA, reopenings → correct fields in generated data (`first_response_at`, `solved_at`, `csat.score`, etc.).
+2. **State constraints upfront** — “no Zendesk admin” → dummy data + documented API migration path in README.
+3. **Bundle filter dimensions** — TAM + account + priority + period in one prompt → cohesive `FilterBar` instead of bolt-on filters.
+4. **Iterate in small UI passes** — one panel or chart per prompt (stale thresholds, region chips, PDF export) keeps diffs reviewable.
+5. **Ask for “apply everywhere”** when global filters should cascade — avoids per-panel filter drift.
+
+---
+
+## Key files
+
+| File | Purpose |
+|------|---------|
+| `scripts/generateData.js` | Synthetic Zendesk-style ticket generator |
+| `public/data/tickets.json` | Generated dataset |
+| `src/utils/metrics.js` | Period bounds, MTTA/MTTR, CSAT, SLA, reopenings |
+| `src/utils/health.js` | Health score, at-risk logic, Markdown report |
+| `src/utils/reportExport.js` | PDF report generation |
+| `src/utils/ticketOps.js` | Stale/aging thresholds, operational scope |
+| `src/utils/kpiDrilldown.js` | KPI → ticket list drill-down |
+| `src/App.jsx` | Filters, routing, tab layout |
+| `src/components/OverviewDashboard.jsx` | Main dashboard composition |
+| `src/components/ExportBar.jsx` | CSV / Markdown / PDF exports |
+
+---
+
+## Demo walkthrough (5 minutes)
+
+1. Open dashboard → **Overview** tab, period **Month**, reference date **2026-06-24**.
+2. Filter **Region: EMEA** — KPIs, charts, stale/aging, and TAM portfolio all scope to EMEA.
+3. Click an **at-risk account** → account health drill-down.
+4. Open **Stale Tickets** → switch threshold to **48h** → **View all** → ticket feed.
+5. **Export → Download PDF** — QBR-ready summary for the filtered period/region.
+
+---
+
+## Future: real Zendesk integration
+
+Replace static JSON with Zendesk API fetch; map `urgent/high/normal/low` → P1–P4; pull ticket metrics and satisfaction ratings. Dashboard components and metrics engine stay unchanged — see `README.md` for endpoint mapping.
+
+---
+
+## Tech stack
+
+- React 19 + Vite
+- Recharts (charts)
+- date-fns (period filtering)
+- jsPDF + jspdf-autotable (PDF export)
+- Local JSON dataset (no backend)
+- Deployed on Vercel

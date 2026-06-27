@@ -28,6 +28,7 @@ export const KPI_KEYS = {
   RESOLVED: 'resolved',
   CLOSED: 'closed',
   NEEDS_ATTENTION: 'needs_attention',
+  TEAM_LINKS: 'team_links',
 };
 
 export const KPI_CONFIG = {
@@ -99,6 +100,10 @@ export const KPI_CONFIG = {
     title: 'Tickets Needing Attention',
     description: 'Tickets flagged for TAM review — P1/P2, SLA breach, escalated, WFR, temp resolution, or reopened.',
   },
+  [KPI_KEYS.TEAM_LINKS]: {
+    title: 'Linked Tickets by Team',
+    description: 'Tickets linked across to another team via JIRA in the selected period.',
+  },
 };
 
 export function getTicketsForKpi(tickets, kpiKey, context = {}) {
@@ -158,6 +163,13 @@ export function getTicketsForKpi(tickets, kpiKey, context = {}) {
       return tickets.filter((t) => t.closed_at);
     case KPI_KEYS.NEEDS_ATTENTION:
       return tickets.filter((t) => t.needs_attention);
+    case KPI_KEYS.TEAM_LINKS: {
+      const team = context?.team;
+      return tickets.filter((t) => {
+        const links = t.team_links ?? [];
+        return team ? links.some((l) => l.team === team) : links.length > 0;
+      });
+    }
     default:
       return tickets;
   }

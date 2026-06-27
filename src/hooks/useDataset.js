@@ -8,7 +8,7 @@ export function useDataset() {
   useEffect(() => {
     let cancelled = false;
 
-    fetch('/data/tickets.json')
+    fetch(`/data/tickets.json?v=${Date.now()}`, { cache: 'no-store' })
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Failed to load ticket data (${response.status})`);

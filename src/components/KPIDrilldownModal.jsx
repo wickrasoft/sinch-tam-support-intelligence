@@ -205,7 +205,8 @@ export default function KPIDrilldownModal({
     drilldownContext?.tamId
       || drilldownContext?.accountId
       || drilldownContext?.region
-      || drilldownContext?.bucketDate,
+      || drilldownContext?.bucketDate
+      || drilldownContext?.team,
   );
 
   const scopedSummary = useMemo(() => {
@@ -239,13 +240,13 @@ export default function KPIDrilldownModal({
 
   const kpiTickets = useMemo(() => {
     if (!kpiKey) return [];
-    const context = { allTickets, filters: effectiveFilters };
+    const context = { allTickets, filters: effectiveFilters, team: drilldownContext?.team };
     let list = getTicketsForKpi(scopedTickets, kpiKey, context);
     if (drilldownContext?.disposition) {
       list = list.filter((t) => t.disposition === drilldownContext.disposition);
     }
     return list;
-  }, [kpiKey, scopedTickets, allTickets, effectiveFilters, drilldownContext?.disposition]);
+  }, [kpiKey, scopedTickets, allTickets, effectiveFilters, drilldownContext?.disposition, drilldownContext?.team]);
 
   if (!kpiKey) return null;
 
@@ -304,15 +305,20 @@ export default function KPIDrilldownModal({
             {dispositionScope && (
               <span className="kpi-drill__scope">Status: {dispositionScope}</span>
             )}
+            {drilldownContext?.team && (
+              <span className="kpi-drill__scope">Team: {drilldownContext.team}</span>
+            )}
           </div>
           <button type="button" className="kpi-drill__close" onClick={onClose} aria-label="Close">×</button>
         </header>
 
         <div className="kpi-drill__body">
-          <section className="kpi-drill__section">
-            <h3>Period comparison</h3>
-            <ComparisonRows rows={compRows} />
-          </section>
+          {compRows.length > 0 && (
+            <section className="kpi-drill__section">
+              <h3>Period comparison</h3>
+              <ComparisonRows rows={compRows} />
+            </section>
+          )}
 
           {kpiKey === KPI_KEYS.SLA && (
             <section className="kpi-drill__section">

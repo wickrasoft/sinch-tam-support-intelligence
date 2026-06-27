@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import TamStatusIcon from './TamStatusIcon';
+import TamOOOPanel from './TamOOOPanel';
+import TeamsShiftsModal from './TeamsShiftsModal';
 import { formatDurationHours, csatIndicator, getPortfolioActivityBreakdown, sumPortfolioActivityBreakdown } from '../utils/metrics';
 import { computeHealthScore, healthIndicator } from '../utils/health';
 import { KPI_KEYS } from '../utils/kpiDrilldown';
@@ -419,6 +421,7 @@ export default function TamOverview({
   tamMetrics,
   allTams,
   referenceDate,
+  publicHolidays,
   selectedRegion,
   onSelectAccount,
   onFilterTam,
@@ -426,6 +429,7 @@ export default function TamOverview({
 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [now, setNow] = useState(() => new Date());
+  const [shiftsScope, setShiftsScope] = useState(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60_000);
@@ -621,6 +625,22 @@ export default function TamOverview({
           );
         })}
       </div>
+
+      <TamOOOPanel
+        tams={selectedRegion ? allTams.filter((t) => normalizeTamRegion(t.region) === selectedRegion) : allTams}
+        referenceDate={referenceDate}
+        onOpen={(tamId) => setShiftsScope({ tamId })}
+      />
+
+      {shiftsScope && (
+        <TeamsShiftsModal
+          tams={selectedRegion ? allTams.filter((t) => normalizeTamRegion(t.region) === selectedRegion) : allTams}
+          referenceDate={referenceDate}
+          publicHolidays={publicHolidays}
+          initialTamId={shiftsScope.tamId}
+          onClose={() => setShiftsScope(null)}
+        />
+      )}
     </article>
   );
 }

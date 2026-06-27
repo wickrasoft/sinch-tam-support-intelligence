@@ -5159,3 +5159,241 @@ body {
   }
 }
 
+/* ── Planned OOO (MS Teams Shifts) timeline ───────────────────────── */
+.tam-ooo {
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--border);
+}
+
+.tam-ooo__header {
+  margin-bottom: 0.85rem;
+}
+
+.tam-ooo__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tam-ooo__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tam-ooo__teams-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: #4b53bc;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tam-ooo__source {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(75, 83, 188, 0.12);
+  color: #6b73d6;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.tam-ooo__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+
+.tam-ooo__subtitle {
+  margin: 0.45rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.tam-ooo__empty {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.tam-ooo__axis {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 0.35rem;
+}
+
+.tam-ooo__axis-spacer {
+  flex: 0 0 150px;
+  width: 150px;
+}
+
+.tam-ooo__axis-track {
+  position: relative;
+  flex: 1;
+  height: 16px;
+}
+
+.tam-ooo__axis-mark {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.tam-ooo__axis-mark:first-child { transform: translateX(0); }
+.tam-ooo__axis-mark:last-child { transform: translateX(-100%); }
+
+.tam-ooo__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.tam-ooo__row {
+  display: flex;
+  align-items: center;
+}
+
+.tam-ooo__row-label {
+  flex: 0 0 150px;
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  padding-right: 0.6rem;
+  overflow: hidden;
+}
+
+.tam-ooo__row-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tam-ooo__row-region {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.tam-ooo__row-track {
+  position: relative;
+  flex: 1;
+  height: 26px;
+  background: var(--bg-subtle, rgba(148, 163, 184, 0.08));
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tam-ooo__gridline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(148, 163, 184, 0.22);
+}
+
+.tam-ooo__bar {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  padding: 0 0.45rem;
+  min-width: 8px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  cursor: default;
+}
+
+.tam-ooo__bar-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: rgba(17, 24, 39, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tam-ooo__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.85rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--border);
+}
+
+.tam-ooo__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.tam-ooo__legend-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+@media (max-width: 640px) {
+  .tam-ooo__axis-spacer,
+  .tam-ooo__row-label {
+    flex-basis: 96px;
+    width: 96px;
+  }
+  .tam-ooo__bar-label { display: none; }
+}
+
+.tam-ooo__title--btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+.tam-ooo__title--btn:hover {
+  color: #6b73d6;
+}
+
+.tam-ooo__open-hint {
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6b73d6;
+  opacity: 0.85;
+}
+
+.tam-ooo__row--clickable {
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.12s ease;
+}
+.tam-ooo__row--clickable:hover {
+  background: rgba(75, 83, 188, 0.06);
+}
+.tam-ooo__row--clickable:focus-visible {
+  outline: 2px solid #6b73d6;
+  outline-offset: 1px;
+}

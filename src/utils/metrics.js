@@ -40,6 +40,8 @@ export function getPeriodBounds(date, period) {
       return { start: startOfQuarter(d), end: endOfQuarter(d) };
     case 'year':
       return { start: startOfYear(d), end: endOfYear(d) };
+    case 'all':
+      return { start: new Date(0), end: endOfDay(d) };
     default:
       return { start: startOfMonth(d), end: endOfMonth(d) };
   }

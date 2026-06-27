@@ -10,21 +10,21 @@ import { dirname, join } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const TAMS = [
-  { id: 'tam-001', name: 'Kalum W.', email: 'kalum.wickramatunga@sinch.com', region: 'EMEA' },
-  { id: 'tam-002', name: 'Marcus Rivera', email: 'marcus.rivera@sinch.com', region: 'US' },
-  { id: 'tam-003', name: 'Priya Patel', email: 'priya.patel@sinch.com', region: 'EMEA' },
-  { id: 'tam-004', name: 'James Okonkwo', email: 'james.okonkwo@sinch.com', region: 'APAC' },
-  { id: 'tam-005', name: 'Elena Vasquez', email: 'elena.vasquez@sinch.com', region: 'LATAM' },
-  { id: 'tam-006', name: 'David Kim', email: 'david.kim@sinch.com', region: 'US' },
-  { id: 'tam-007', name: 'Amira Hassan', email: 'amira.hassan@sinch.com', region: 'EMEA' },
-  { id: 'tam-008', name: 'Tomás Bergström', email: 'tomas.bergstrom@sinch.com', region: 'EMEA' },
-  { id: 'tam-009', name: 'Rachel Okafor', email: 'rachel.okafor@sinch.com', region: 'US' },
-  { id: 'tam-010', name: 'Yuki Tanaka', email: 'yuki.tanaka@sinch.com', region: 'APAC' },
-  { id: 'tam-011', name: 'Sophie Laurent', email: 'sophie.laurent@sinch.com', region: 'EMEA' },
-  { id: 'tam-012', name: 'Carlos Mendez', email: 'carlos.mendez@sinch.com', region: 'LATAM' },
-  { id: 'tam-013', name: 'Aisha Rahman', email: 'aisha.rahman@sinch.com', region: 'APAC' },
-  { id: 'tam-014', name: 'Liam O\'Brien', email: 'liam.obrien@sinch.com', region: 'EMEA' },
-  { id: 'tam-015', name: 'Nina Kowalski', email: 'nina.kowalski@sinch.com', region: 'US' },
+  { id: 'tam-001', name: 'Kalum W.', email: 'kalum.wickramatunga@sinch.com', region: 'EMEA', country: 'United Kingdom' },
+  { id: 'tam-002', name: 'Marcus Rivera', email: 'marcus.rivera@sinch.com', region: 'US', country: 'United States' },
+  { id: 'tam-003', name: 'Priya Patel', email: 'priya.patel@sinch.com', region: 'EMEA', country: 'United Kingdom' },
+  { id: 'tam-004', name: 'James Okonkwo', email: 'james.okonkwo@sinch.com', region: 'APAC', country: 'Australia' },
+  { id: 'tam-005', name: 'Elena Vasquez', email: 'elena.vasquez@sinch.com', region: 'LATAM', country: 'Mexico' },
+  { id: 'tam-006', name: 'David Kim', email: 'david.kim@sinch.com', region: 'US', country: 'United States' },
+  { id: 'tam-007', name: 'Amira Hassan', email: 'amira.hassan@sinch.com', region: 'EMEA', country: 'United Arab Emirates' },
+  { id: 'tam-008', name: 'Tomás Bergström', email: 'tomas.bergstrom@sinch.com', region: 'EMEA', country: 'Sweden' },
+  { id: 'tam-009', name: 'Rachel Okafor', email: 'rachel.okafor@sinch.com', region: 'US', country: 'Canada' },
+  { id: 'tam-010', name: 'Yuki Tanaka', email: 'yuki.tanaka@sinch.com', region: 'APAC', country: 'Singapore' },
+  { id: 'tam-011', name: 'Sophie Laurent', email: 'sophie.laurent@sinch.com', region: 'EMEA', country: 'Sweden' },
+  { id: 'tam-012', name: 'Carlos Mendez', email: 'carlos.mendez@sinch.com', region: 'LATAM', country: 'Brazil' },
+  { id: 'tam-013', name: 'Aisha Rahman', email: 'aisha.rahman@sinch.com', region: 'APAC', country: 'India' },
+  { id: 'tam-014', name: 'Liam O\'Brien', email: 'liam.obrien@sinch.com', region: 'EMEA', country: 'United Kingdom' },
+  { id: 'tam-015', name: 'Nina Kowalski', email: 'nina.kowalski@sinch.com', region: 'US', country: 'United States' },
 ];
 
 const ACCOUNT_DEFS = [
@@ -212,6 +212,96 @@ const IMPACT_LEVELS = ['Critical', 'High', 'Medium', 'Low'];
 const ERROR_CODES = ['50001', '50003', '50102', '50201', 'DELIVERY_TIMEOUT', 'CARRIER_REJECT', 'INVALID_SENDER', 'THROTTLED', null, null];
 const ESCALATION_TEAMS = ['Sinch Carrier Ops', '10DLC Compliance Team', 'SMS Platform Engineering', 'Conversation API Support', 'Numbers Provisioning', 'Verification Platform'];
 
+// Zendesk is integrated with JIRA. TAMs link tickets across to the other teams
+// they engage with. Each team has its own JIRA project / ticket type. Not every
+// ticket is linked — only a subset are handed across.
+const PARTNER_TEAMS = [
+  { team: 'Service Operations', project: 'TOR', weight: 0.22 },
+  { team: 'Engineering', project: 'DEVTRIA', weight: 0.24 },
+  { team: 'Global Product', project: 'GM', weight: 0.15 },
+  { team: 'Customer Dashboard', project: 'CDG', weight: 0.11 },
+  { team: 'Anti-Fraud Analysis', project: 'TOR', weight: 0.10 },
+  { team: 'Supplier Escalation', project: 'SINCHSUP', weight: 0.10 },
+  { team: 'P2P', project: 'P2P', weight: 0.08 },
+];
+const PARTNER_JIRA_OPEN_STATUSES = ['Open', 'In Progress', 'In Review', 'Blocked'];
+
+function pickPartnerTeams(rng, count) {
+  const pool = PARTNER_TEAMS.map((t) => ({ ...t }));
+  const chosen = [];
+  for (let i = 0; i < count && pool.length; i++) {
+    const total = pool.reduce((sum, t) => sum + t.weight, 0);
+    let roll = rng() * total;
+    let idx = 0;
+    for (; idx < pool.length - 1; idx++) {
+      roll -= pool[idx].weight;
+      if (roll <= 0) break;
+    }
+    chosen.push(pool[idx]);
+    pool.splice(idx, 1);
+  }
+  return chosen;
+}
+
+function buildTeamLinks({ rng, priority, disposition, subjectEntry }) {
+  const isClosed = disposition === 'closed';
+  // Every escalation is handed to one of these teams.
+  let chance = 0.10;
+  if (disposition === 'escalated') chance = 1;
+  else if (priority === 'P1') chance = 0.6;
+  else if (priority === 'P2') chance = 0.38;
+  else if (priority === 'P3') chance = 0.14;
+
+  if (rng() > chance) return [];
+
+  // One escalation per ticket — a ticket is handed to a single partner team.
+  const count = 1;
+  return pickPartnerTeams(rng, count).map((t) => {
+    const key = `${t.project}-${Math.floor(rng() * 9000 + 1000)}`;
+    const status = isClosed
+      ? (rng() < 0.7 ? 'Done' : 'In Review')
+      : PARTNER_JIRA_OPEN_STATUSES[Math.floor(rng() * PARTNER_JIRA_OPEN_STATUSES.length)];
+    return {
+      team: t.team,
+      project: t.project,
+      key,
+      status,
+      summary: `${subjectEntry.product} — ${subjectEntry.subject.slice(0, 55)}`,
+      url: `https://sinch.atlassian.net/browse/${key}`,
+    };
+  });
+}
+
+// Every P1/P2 ticket triggers an incident record (INC) that is linked back to the
+// Zendesk ticket via the incident-management workflow. This is separate from the
+// cross-team JIRA escalations (team_links) and is NOT counted in the linked-by-team
+// pie chart — a ticket can carry both an INC and one or more team escalations.
+function buildIncident({ rng, priority, disposition, subjectEntry, createdAt }) {
+  if (priority !== 'P1' && priority !== 'P2') return null;
+
+  const key = `INC-${Math.floor(rng() * 90000 + 10000)}`;
+  const severity = priority === 'P1' ? 'SEV1' : 'SEV2';
+  let status;
+  switch (disposition) {
+    case 'closed': status = 'Resolved'; break;
+    case 'temp_resolution': status = 'Mitigated'; break;
+    case 'escalated': status = 'Investigating'; break;
+    case 'waiting_for_response': status = 'Monitoring'; break;
+    default: status = 'Investigating';
+  }
+  // Incident is raised shortly after the ticket comes in.
+  const raisedAt = addMinutes(createdAt, Math.round(5 + rng() * 40));
+
+  return {
+    key,
+    severity,
+    status,
+    summary: `${subjectEntry.product} — ${subjectEntry.subject.slice(0, 55)}`,
+    url: `https://sinch.atlassian.net/browse/${key}`,
+    created_at: raisedAt.toISOString(),
+  };
+}
+
 const DISPOSITION_WEIGHTS_OPEN = [
   { disposition: 'in_progress', weight: 0.35 },
   { disposition: 'waiting_for_response', weight: 0.25 },
@@ -227,6 +317,117 @@ const DISPOSITION_WEIGHTS_OLD = [
   { disposition: 'in_progress', weight: 0.02 },
   { disposition: 'waiting_for_response', weight: 0.02 },
 ];
+
+// Personal out-of-office types as they would surface from a Microsoft Teams Shifts
+// sync. Public holidays are NOT here — they are company-wide non-working days that
+// apply to everyone (see buildPublicHolidays).
+const OOO_TYPES = [
+  { type: 'Vacation', weight: 0.45 },
+  { type: 'Training', weight: 0.18 },
+  { type: 'Conference', weight: 0.14 },
+  { type: 'Sick Leave', weight: 0.10 },
+  { type: 'Personal', weight: 0.13 },
+];
+
+// Local public holidays differ by the TAM's country. Names per country (used to
+// label generated in-window holidays). TAMs do not work on their own country's
+// public holidays (or on weekends).
+const COUNTRY_HOLIDAY_NAMES = {
+  'United States': ['Independence Day', 'Labor Day', 'Memorial Day (obs.)', 'Juneteenth'],
+  Canada: ['Canada Day', 'Civic Holiday', 'Labour Day'],
+  Mexico: ['Día de la Independencia', 'Natalicio de Benito Juárez', 'Día de la Revolución'],
+  Brazil: ['Independência do Brasil', 'Corpus Christi', 'Nossa Senhora Aparecida'],
+  India: ['Independence Day', 'Gandhi Jayanti', 'Muharram', 'Raksha Bandhan'],
+  Singapore: ['National Day', 'Hari Raya Haji', 'Vesak Day'],
+  China: ['Dragon Boat Festival', 'Mid-Autumn Festival', 'National Day'],
+  Australia: ['Queen\u2019s Birthday', 'Labour Day', 'Picnic Day'],
+  Sweden: ['Midsommarafton', 'Nationaldagen', 'Kristi himmelsf\u00e4rdsdag'],
+  'United Kingdom': ['Summer Bank Holiday', 'Spring Bank Holiday', 'Early May Bank Holiday'],
+  'United Arab Emirates': ['Islamic New Year', 'Eid al-Adha (obs.)', 'Commemoration Day'],
+};
+
+function isoDay(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+// Per-country public holidays in the next ~40 days. Each TAM observes the
+// holidays of their own country. Deterministic but anchored to "today" so they
+// always fall inside the visible window. Weekends are skipped (holidays land on
+// weekdays). Returns a flat array of { date, name, country }.
+function buildCountryHolidays(tams, today) {
+  const dayMs = 24 * 60 * 60 * 1000;
+  const base = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  const countries = [...new Set(tams.map((t) => t.country).filter(Boolean))];
+  const out = [];
+
+  countries.forEach((country, ci) => {
+    const rng = seededRandom(4001 + ci * 131 + country.length);
+    const pool = COUNTRY_HOLIDAY_NAMES[country] ?? ['Public Holiday'];
+    const target = 1 + (rng() < 0.5 ? 1 : 0); // 1–2 holidays in window
+    const usedOffsets = new Set();
+    let made = 0;
+    let attempts = 0;
+
+    while (made < target && attempts < 40) {
+      attempts += 1;
+      const offset = 4 + Math.floor(rng() * 33);
+      const date = new Date(base.getTime() + offset * dayMs);
+      const dow = date.getUTCDay();
+      if (dow === 0 || dow === 6) continue; // holidays fall on weekdays here
+      if (usedOffsets.has(offset)) continue;
+      usedOffsets.add(offset);
+      out.push({ date: isoDay(date), name: pool[Math.floor(rng() * pool.length)], country });
+      made += 1;
+    }
+  });
+
+  out.sort((a, b) => (a.date === b.date ? a.country.localeCompare(b.country) : a.date.localeCompare(b.date)));
+  return out;
+}
+
+// Simulates a Microsoft Teams Shifts sync: planned OOO blocks for each TAM across
+// the next 30 days. Deterministic (fixed seed) but anchored to "today" so the
+// window is always current. Each entry carries a source so the UI can show it was
+// pulled from Teams.
+function buildPlannedOOOForTams(tams, today) {
+  const rng = seededRandom(7321);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const base = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  const map = {};
+
+  tams.forEach((t) => {
+    const blocks = [];
+    let cursor = 1 + Math.floor(rng() * 5);
+    while (cursor <= 30 && blocks.length < 2) {
+      if (rng() < 0.5) {
+        const typeObj = pickWeighted(rng, OOO_TYPES);
+        const maxLen = typeObj.type === 'Public Holiday'
+          ? 1
+          : (typeObj.type === 'Vacation' ? 7 : 3);
+        const len = 1 + Math.floor(rng() * maxLen);
+        const startOffset = cursor;
+        const endOffset = Math.min(30, cursor + len - 1);
+        const sameRegion = tams.filter((o) => o.id !== t.id && o.region === t.region);
+        const pool = sameRegion.length ? sameRegion : tams.filter((o) => o.id !== t.id);
+        const backup = pool[Math.floor(rng() * pool.length)];
+        blocks.push({
+          type: typeObj.type,
+          start: isoDay(new Date(base.getTime() + startOffset * dayMs)),
+          end: isoDay(new Date(base.getTime() + endOffset * dayMs)),
+          backup_tam_id: backup?.id ?? null,
+          all_day: true,
+          source: 'Microsoft Teams Shifts',
+        });
+        cursor = endOffset + 2 + Math.floor(rng() * 7);
+      } else {
+        cursor += 3 + Math.floor(rng() * 6);
+      }
+    }
+    if (blocks.length) map[t.id] = blocks;
+  });
+
+  return map;
+}
 
 function buildAccountProfiles() {
   const profiles = {};
@@ -602,6 +803,8 @@ function generateTicket(id, account, rng, createdAt, endDate) {
   const errorCode = ERROR_CODES[Math.floor(rng() * ERROR_CODES.length)];
   const region = TAM_TO_ZD_REGION[tam.region] ?? SINCH_REGIONS[Math.floor(rng() * SINCH_REGIONS.length)];
   const volumeImpact = ['critical', 'high', 'medium', 'low'][Math.floor(rng() * 4)];
+  const teamLinks = buildTeamLinks({ rng, priority, disposition, subjectEntry });
+  const incident = buildIncident({ rng, priority, disposition, subjectEntry, createdAt });
 
   const { contactName, contactEmail, threads } = buildConversation(
     subjectEntry, account, tam, rng, createdAt, firstResponseAt, disposition,
@@ -674,6 +877,8 @@ function generateTicket(id, account, rng, createdAt, endDate) {
     csat,
     reopen_count: reopenCount,
     reopen_events: reopenEvents,
+    team_links: teamLinks,
+    incident,
     tags: tagList,
   };
 
@@ -759,6 +964,9 @@ function generateDataset() {
 
   tickets.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
+  const oooSchedules = buildPlannedOOOForTams(TAMS, endDate);
+  const publicHolidays = buildCountryHolidays(TAMS, endDate);
+
   return {
     meta: {
       generated_at: new Date().toISOString(),
@@ -777,11 +985,16 @@ function generateDataset() {
       regions: SINCH_REGIONS,
       tam_regions: TAM_REGIONS,
       zendesk_base_url: ZENDESK_BASE_URL,
+      public_holidays: publicHolidays,
+      non_working_days: 'TAMs do not work on weekends or their own country public holidays.',
     },
     tams: TAMS.map((t) => ({
       ...t,
       timezone: REGION_TIMEZONES[t.region],
-      availability: TAM_AVAILABILITY_SCHEDULES[t.id] ?? {},
+      availability: {
+        ...(TAM_AVAILABILITY_SCHEDULES[t.id] ?? {}),
+        ooo: oooSchedules[t.id] ?? [],
+      },
     })),
     accounts: ACCOUNTS.map((a) => ({
       ...a,

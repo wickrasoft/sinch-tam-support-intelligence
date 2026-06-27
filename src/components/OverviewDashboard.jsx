@@ -6,6 +6,7 @@ import AccountHealthChart from './AccountHealthChart';
 import PriorityChart from './PriorityChart';
 import SlaBreachChart from './SlaBreachChart';
 import RegionDistributionPanel from './RegionDistributionPanel';
+import TeamEscalationsPanel from './TeamEscalationsPanel';
 import CsatsSection from './CsatsSection';
 import ResponseTimeChart from './ResponseTimeChart';
 import ReopeningsChart from './ReopeningsChart';
@@ -15,12 +16,14 @@ export default function OverviewDashboard({
   summary,
   comparison,
   filteredTickets,
+  teamLinkTickets,
   onDrilldown,
   tams,
   allTickets,
   accounts,
   filters,
   referenceDate,
+  publicHolidays,
   staleThresholdId,
   onStaleThresholdChange,
   agingThresholdId,
@@ -103,6 +106,8 @@ export default function OverviewDashboard({
         />
       </section>
 
+      <TeamEscalationsPanel tickets={teamLinkTickets ?? filteredTickets} onDrilldown={onDrilldown} />
+
       <CsatsSection
         summary={summary}
         ratedTickets={ratedTickets}
@@ -124,6 +129,7 @@ export default function OverviewDashboard({
         tamMetrics={tamMetrics}
         allTams={tams}
         referenceDate={referenceDate}
+        publicHolidays={publicHolidays}
         selectedRegion={selectedRegion}
         onSelectAccount={onAccountHealthDrilldown}
         onFilterTam={onFilterTam}
