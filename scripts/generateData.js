@@ -109,6 +109,20 @@ const REGION_TIMEZONES = {
   APAC: 'Asia/Singapore',
   LATAM: 'America/Sao_Paulo',
 };
+// Country-specific timezones so each TAM's clock reflects their actual location.
+const COUNTRY_TIMEZONES = {
+  'United States': 'America/New_York',
+  Canada: 'America/Toronto',
+  Mexico: 'America/Mexico_City',
+  Brazil: 'America/Sao_Paulo',
+  India: 'Asia/Kolkata',
+  Singapore: 'Asia/Singapore',
+  China: 'Asia/Shanghai',
+  Australia: 'Australia/Sydney',
+  Sweden: 'Europe/Stockholm',
+  'United Kingdom': 'Europe/London',
+  'United Arab Emirates': 'Asia/Dubai',
+};
 const ZENDESK_BASE_URL = 'https://sinchmessaging.zendesk.com/agent/tickets';
 
 const SUPPORT_AGENTS = [
@@ -321,12 +335,12 @@ const DISPOSITION_WEIGHTS_OLD = [
 // Personal out-of-office types as they would surface from a Microsoft Teams Shifts
 // sync. Public holidays are NOT here — they are company-wide non-working days that
 // apply to everyone (see buildPublicHolidays).
+// Planned OOO only — sick leave is unplanned and is never scheduled ahead.
 const OOO_TYPES = [
-  { type: 'Vacation', weight: 0.45 },
-  { type: 'Training', weight: 0.18 },
-  { type: 'Conference', weight: 0.14 },
-  { type: 'Sick Leave', weight: 0.10 },
-  { type: 'Personal', weight: 0.13 },
+  { type: 'Vacation', weight: 0.50 },
+  { type: 'Training', weight: 0.20 },
+  { type: 'Conference', weight: 0.16 },
+  { type: 'Personal', weight: 0.14 },
 ];
 
 // Local public holidays differ by the TAM's country. Names per country (used to
@@ -990,7 +1004,7 @@ function generateDataset() {
     },
     tams: TAMS.map((t) => ({
       ...t,
-      timezone: REGION_TIMEZONES[t.region],
+      timezone: COUNTRY_TIMEZONES[t.country] ?? REGION_TIMEZONES[t.region],
       availability: {
         ...(TAM_AVAILABILITY_SCHEDULES[t.id] ?? {}),
         ooo: oooSchedules[t.id] ?? [],

@@ -9,6 +9,61 @@ export const REGION_TIMEZONES = {
   LATAM: 'America/Sao_Paulo',
 };
 
+// Country-specific timezones (preferred over region when a TAM's country is known).
+export const COUNTRY_TIMEZONES = {
+  'United States': 'America/New_York',
+  Canada: 'America/Toronto',
+  Mexico: 'America/Mexico_City',
+  Brazil: 'America/Sao_Paulo',
+  India: 'Asia/Kolkata',
+  Singapore: 'Asia/Singapore',
+  China: 'Asia/Shanghai',
+  Australia: 'Australia/Sydney',
+  Sweden: 'Europe/Stockholm',
+  'United Kingdom': 'Europe/London',
+  'United Arab Emirates': 'Asia/Dubai',
+};
+
+/** Resolve the IANA timezone for a TAM: explicit > country > region > UTC. */
+export function getTamTimezone(tam) {
+  if (!tam) return 'UTC';
+  if (tam.timezone) return tam.timezone;
+  if (tam.country && COUNTRY_TIMEZONES[tam.country]) return COUNTRY_TIMEZONES[tam.country];
+  const region = TAM_REGIONS.includes(tam.region) ? tam.region : 'US';
+  return REGION_TIMEZONES[region] ?? 'UTC';
+}
+
+/** Current wall-clock time (HH:MM, 24h) for a TAM's local timezone. */
+export function getTamLocalTime(tam, at = new Date()) {
+  try {
+    return new Intl.DateTimeFormat('en-GB', {
+      timeZone: getTamTimezone(tam),
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(at);
+  } catch {
+    return '';
+  }
+}
+
+/** Current local hour/minute for a TAM's timezone (for an analog clock dial). */
+export function getTamLocalTimeParts(tam, at = new Date()) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: getTamTimezone(tam),
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(at);
+    const hour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10) % 24;
+    const minute = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
+    return { hour: hour === 24 ? 0 : hour, minute };
+  } catch {
+    return null;
+  }
+}
+
 export const REGION_WORK_HOURS = {
   US: { start: 9, end: 18, lunchStart: 12, lunchEnd: 13 },
   EMEA: { start: 9, end: 18, lunchStart: 12, lunchEnd: 13 },

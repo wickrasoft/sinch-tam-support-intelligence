@@ -15,3 +15,22 @@ export function formatTamDisplayName(name, region) {
   if (!region) return name;
   return `${name} (${normalizeTamRegion(region)})`;
 }
+
+const COUNTRY_FLAGS = {
+  'United States': '🇺🇸',
+  Canada: '🇨🇦',
+  Mexico: '🇲🇽',
+  Brazil: '🇧🇷',
+  India: '🇮🇳',
+  Singapore: '🇸🇬',
+  China: '🇨🇳',
+  Australia: '🇦🇺',
+  Sweden: '🇸🇪',
+  'United Kingdom': '🇬🇧',
+  'United Arab Emirates': '🇦🇪',
+};
+
+export function countryFlag(country) {
+  if (!country) return '';
+  return COUNTRY_FLAGS[country] ?? '';
+}

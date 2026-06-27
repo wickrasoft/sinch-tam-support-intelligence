@@ -3443,8 +3443,9 @@ body {
   line-height: 1;
 }
 
-.tam-card__online-icon .tam-status-icon__emoji {
-  font-size: 1.15rem;
+.tam-card__online-icon .tam-status-icon__dial {
+  width: 1.9em;
+  height: 1.9em;
 }
 
 .tam-card__title-row h3 {
@@ -3460,11 +3461,18 @@ body {
 }
 
 .tam-card__name {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tam-card__flag {
+  flex: 0 0 auto;
+  margin-left: 0.35rem;
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
 .tam-card__badge-group {
@@ -4378,15 +4386,72 @@ body {
 }
 
 .tam-status-icon {
+  position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.25rem;
   line-height: 1;
 }
 
+/* One dial = availability (status sign as the backdrop, status-colored ring)
+   plus current local time (the watch hands). */
+.tam-status-icon__dial {
+  width: 1.7em;
+  height: 1.7em;
+  display: block;
+  overflow: visible;
+  --dial-face: #64748b;
+  --dial-ink: rgba(15, 23, 42, 0.92);
+}
+
+.tam-status-icon__dial--online { --dial-face: #10b981; }
+.tam-status-icon__dial--away { --dial-face: #f59e0b; }
+.tam-status-icon__dial--offline { --dial-face: #94a3b8; }
+.tam-status-icon__dial--vacation { --dial-face: #fbbf24; }
+.tam-status-icon__dial--sick { --dial-face: #f472b6; }
+
+/* Soft tint backdrop with a status-colored ring. */
+.tam-status-icon__dial-face {
+  fill: #f8fafc;
+  stroke: var(--dial-face);
+  stroke-width: 3;
+}
+
+/* Availability sign fills the whole dial as the backdrop image. */
+.tam-status-icon__dial-sign {
+  font-size: 34px;
+  opacity: 1;
+}
+
+/* Watch hands overlay the sign. */
+.tam-status-icon__dial-hand {
+  stroke: var(--dial-ink);
+  stroke-linecap: round;
+  paint-order: stroke;
+}
+
+.tam-status-icon__dial-hand--hour {
+  stroke-width: 4.2;
+}
+
+.tam-status-icon__dial-hand--minute {
+  stroke-width: 3;
+}
+
+.tam-status-icon__dial-pin {
+  fill: var(--dial-ink);
+}
+
+/* Fallback emoji (only when local time is unavailable). */
 .tam-status-icon__emoji {
   font-size: 0.8rem;
   line-height: 1;
+}
+
+.tam-status-icon__label {
+  position: relative;
+  z-index: 1;
 }
 
 .tam-status-icon__label {
@@ -5198,6 +5263,41 @@ body {
   background: #4b53bc;
   color: #fff;
   font-size: 13px;
+  font-weight: 800;
+}
+
+.tam-ooo__header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tam-ooo__open-teams {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid #4b53bc;
+  background: #4b53bc;
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tam-ooo__open-teams:hover { background: #3f47a6; border-color: #3f47a6; }
+
+.tam-ooo__open-teams-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: #fff;
+  color: #4b53bc;
+  font-size: 11px;
   font-weight: 800;
 }
 

@@ -24,6 +24,15 @@
   font-size: 13px;
 }
 
+/* Inline (non-modal) embedding of the same grid inside a dashboard panel. */
+.tsx--embedded {
+  width: 100%;
+  max-height: 440px;
+  margin-top: 0.75rem;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.18);
+  font-size: 12px;
+}
+
 .tsx__chrome {
   display: flex;
   align-items: center;
@@ -48,6 +57,36 @@
 
 .tsx__app { display: block; font-size: 0.92rem; font-weight: 700; }
 .tsx__schedule { display: block; font-size: 0.72rem; opacity: 0.85; }
+
+.tsx__chrome-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+.tsx__open-teams {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.32rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tsx__open-teams:hover { background: rgba(255, 255, 255, 0.26); }
+
+.tsx__open-teams-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  background: #fff;
+  color: #4b53bc;
+  font-weight: 800;
+  font-size: 0.62rem;
+}
 
 .tsx__close {
   border: none;
@@ -124,7 +163,7 @@
 }
 .tsx__viewall:hover { background: #4b53bc; color: #fff; border-color: #4b53bc; }
 
-.tsx__scroll { flex: 1; overflow: auto; }
+.tsx__scroll { flex: 1; overflow-x: hidden; overflow-y: auto; }
 .tsx__inner { display: flex; flex-direction: column; }
 
 .tsx__row { display: flex; border-bottom: 1px solid #2f2f36; }
@@ -149,13 +188,14 @@
   font-size: 0.76rem;
 }
 
-.tsx__track { position: relative; flex-shrink: 0; display: flex; }
+.tsx__track { position: relative; flex: 1; min-width: 0; display: flex; }
 
 .tsx__row--head { position: sticky; top: 0; z-index: 3; background: #26262c; }
 .tsx__row--head .tsx__track { background: #26262c; }
 
 .tsx__daycol {
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -180,7 +220,8 @@
 
 .tsx__row--summary .tsx__rowlabel { color: #a9a9b3; }
 .tsx__daycell {
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,7 +286,8 @@
 .tsx__track--person { align-items: center; }
 
 .tsx__gridcell {
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 0;
   height: 100%;
   min-height: 46px;
   border-right: 1px solid #2a2a30;

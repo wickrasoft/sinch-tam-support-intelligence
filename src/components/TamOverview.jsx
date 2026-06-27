@@ -6,7 +6,7 @@ import TeamsShiftsModal from './TeamsShiftsModal';
 import { formatDurationHours, csatIndicator, getPortfolioActivityBreakdown, sumPortfolioActivityBreakdown } from '../utils/metrics';
 import { computeHealthScore, healthIndicator } from '../utils/health';
 import { KPI_KEYS } from '../utils/kpiDrilldown';
-import { formatAccountCount, formatTamDisplayName } from '../utils/text';
+import { formatAccountCount, formatTamDisplayName, countryFlag } from '../utils/text';
 import { TAM_REGIONS } from '../utils/regionMetrics';
 import {
   enrichTamsWithAvailability,
@@ -570,6 +570,15 @@ export default function TamOverview({
                       <span className="tam-card__name">
                         {formatTamDisplayName(tam.tam_name, tamMeta?.region)}
                       </span>
+                      {tamMeta?.country && (
+                        <span
+                          className="tam-card__flag"
+                          title={tamMeta.country}
+                          aria-label={tamMeta.country}
+                        >
+                          {countryFlag(tamMeta.country)}
+                        </span>
+                      )}
                     </h3>
                     <div className="tam-card__corner">
                       <div className="tam-card__badge-group">
@@ -629,6 +638,7 @@ export default function TamOverview({
       <TamOOOPanel
         tams={selectedRegion ? allTams.filter((t) => normalizeTamRegion(t.region) === selectedRegion) : allTams}
         referenceDate={referenceDate}
+        publicHolidays={publicHolidays}
         onOpen={(tamId) => setShiftsScope({ tamId })}
       />
 
