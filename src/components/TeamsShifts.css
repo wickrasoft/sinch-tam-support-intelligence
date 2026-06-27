@@ -350,3 +350,35 @@
   );
 }
 .tsx__legend-note { margin-left: auto; font-size: 0.7rem; color: #9a9aa4; }
+
+/* Mobile: 30 thin columns become unreadable, so give each day a minimum width
+   and re-enable horizontal scroll with the name column frozen on the left. */
+@media (max-width: 640px) {
+  .tsx__scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tsx__inner { min-width: max-content; }
+
+  .tsx__track { flex: 0 0 auto; width: auto; min-width: 0; }
+
+  .tsx__daycol,
+  .tsx__daycell,
+  .tsx__gridcell {
+    flex: 0 0 34px;
+    width: 34px;
+  }
+
+  /* Override the inline label width so the frozen column is phone-friendly. */
+  .tsx__rowlabel { width: 132px !important; }
+
+  .tsx__avatar { width: 24px; height: 24px; font-size: 0.62rem; }
+  .tsx__person-name { font-size: 0.74rem; }
+  .tsx__person-region { font-size: 0.6rem; }
+
+  .tsx__legend { gap: 0.5rem 0.8rem; }
+  .tsx__legend-note { margin-left: 0; flex-basis: 100%; }
+
+  .tsx--embedded { max-height: 60vh; }
+}
