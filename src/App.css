@@ -5695,12 +5695,6 @@ a.kpi-card {
   border: 0;
   display: block;
   background: #ebebef;
-  /* Lock the embed to a fixed snapshot of the top checks: with no scrolling the
-     user can't reach the monitor page's footer ("Powered by Checkly" / repeated
-     header), which can't be hidden via CSS because the iframe is cross-origin.
-     Wheel events fall through to the dashboard, and "Open monitor" gives full
-     interactive access. */
-  pointer-events: none;
 }
 
 /* The monitor page header grows as the iframe narrows (its status.sinch.com

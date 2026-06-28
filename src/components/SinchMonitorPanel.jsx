@@ -38,7 +38,7 @@ export default function SinchMonitorPanel() {
           src={MONITOR_URL}
           className="sinc-mon__frame"
           loading="lazy"
-          scrolling="no"
+          scrolling="yes"
           onLoad={() => setLoaded(true)}
           referrerPolicy="no-referrer-when-downgrade"
         />
