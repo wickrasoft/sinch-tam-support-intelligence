@@ -67,6 +67,7 @@ function DashboardApp({ dataset }) {
   const [regionReturnPending, setRegionReturnPending] = useState(false);
   const [ticketKpiFilter, setTicketKpiFilter] = useState(null);
   const [ticketTeamScope, setTicketTeamScope] = useState(null);
+  const [ticketProductScope, setTicketProductScope] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [filters, setFilters] = useState({
     tamId: '',
@@ -178,13 +179,14 @@ function DashboardApp({ dataset }) {
         allTickets,
         filters: activeFilters,
         team: ticketTeamScope,
+        product: ticketProductScope,
       });
     }
     if (attentionOnly) {
       return filteredTickets.filter((t) => t.needs_attention);
     }
     return filteredTickets;
-  }, [filteredTickets, allTickets, activeFilters, operationalTickets, attentionOnly, ticketKpiFilter, ticketTeamScope, teamLinkTickets, operationalFilter, staleThresholdId, agingThresholdId, atRiskAccounts, accounts, filters, tams]);
+  }, [filteredTickets, allTickets, activeFilters, operationalTickets, attentionOnly, ticketKpiFilter, ticketTeamScope, ticketProductScope, teamLinkTickets, operationalFilter, staleThresholdId, agingThresholdId, atRiskAccounts, accounts, filters, tams]);
 
   const tamMetrics = useMemo(
     () => groupByTam(filteredTickets, allTickets, activeFilters, accounts, tams),
@@ -496,6 +498,7 @@ function DashboardApp({ dataset }) {
     }));
     setTicketKpiFilter(kpiFilter ?? kpiKey);
     setTicketTeamScope(kpiKey === KPI_KEYS.TEAM_LINKS ? (drilldownContext?.team ?? null) : null);
+    setTicketProductScope(kpiKey === KPI_KEYS.PRODUCT ? (drilldownContext?.product ?? null) : null);
     setAttentionOnly(false);
     setActiveKpiDrilldown(null);
     setDrilldownContext(null);
@@ -535,6 +538,7 @@ function DashboardApp({ dataset }) {
     setAgingThresholdId(DEFAULT_AGING_THRESHOLD_ID);
     setTicketKpiFilter(null);
     setTicketTeamScope(null);
+    setTicketProductScope(null);
     setAccountsAtRiskOnly(false);
     setAtRiskReturnPending(false);
     setAttentionReturnPending(false);
@@ -786,6 +790,7 @@ function DashboardApp({ dataset }) {
                   <span className="filter-banner__label">
                     {ticketKpiFilter && KPI_CONFIG[ticketKpiFilter]?.title}
                     {ticketKpiFilter === KPI_KEYS.TEAM_LINKS && ticketTeamScope ? ` — ${ticketTeamScope}` : ''}
+                    {ticketKpiFilter === KPI_KEYS.PRODUCT && ticketProductScope ? ` — ${ticketProductScope}` : ''}
                     {attentionOnly && 'Showing tickets needing attention only'}
                     {operationalFilter === 'stale' && (
                       <>

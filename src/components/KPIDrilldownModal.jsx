@@ -228,7 +228,8 @@ export default function KPIDrilldownModal({
       || drilldownContext?.accountId
       || drilldownContext?.region
       || drilldownContext?.bucketDate
-      || drilldownContext?.team,
+      || drilldownContext?.team
+      || drilldownContext?.product,
   );
 
   const scopedSummary = useMemo(() => {
@@ -262,13 +263,13 @@ export default function KPIDrilldownModal({
 
   const kpiTickets = useMemo(() => {
     if (!kpiKey) return [];
-    const context = { allTickets, filters: effectiveFilters, team: drilldownContext?.team };
+    const context = { allTickets, filters: effectiveFilters, team: drilldownContext?.team, product: drilldownContext?.product };
     let list = getTicketsForKpi(scopedTickets, kpiKey, context);
     if (drilldownContext?.disposition) {
       list = list.filter((t) => t.disposition === drilldownContext.disposition);
     }
     return list;
-  }, [kpiKey, scopedTickets, allTickets, effectiveFilters, drilldownContext?.disposition, drilldownContext?.team]);
+  }, [kpiKey, scopedTickets, allTickets, effectiveFilters, drilldownContext?.disposition, drilldownContext?.team, drilldownContext?.product]);
 
   if (!kpiKey) return null;
 
@@ -335,6 +336,9 @@ export default function KPIDrilldownModal({
             )}
             {drilldownContext?.team && (
               <span className="kpi-drill__scope">Team: {drilldownContext.team}</span>
+            )}
+            {drilldownContext?.product && (
+              <span className="kpi-drill__scope">Product: {drilldownContext.product}</span>
             )}
           </div>
           <button type="button" className="kpi-drill__close" onClick={onClose} aria-label="Close">×</button>

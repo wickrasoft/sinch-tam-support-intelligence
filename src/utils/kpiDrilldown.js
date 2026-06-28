@@ -32,6 +32,7 @@ export const KPI_KEYS = {
   CLOSED: 'closed',
   NEEDS_ATTENTION: 'needs_attention',
   TEAM_LINKS: 'team_links',
+  PRODUCT: 'product',
   FCR: 'fcr',
   P1_INCIDENTS: 'p1_incidents',
   HANDLED: 'handled',
@@ -115,6 +116,10 @@ export const KPI_CONFIG = {
   [KPI_KEYS.TEAM_LINKS]: {
     title: 'Linked Tickets by Team',
     description: 'Tickets linked across to another team via JIRA in the selected period.',
+  },
+  [KPI_KEYS.PRODUCT]: {
+    title: 'Tickets by Product',
+    description: 'Tickets for the selected Sinch product in the selected period.',
   },
   [KPI_KEYS.FCR]: {
     title: 'First Contact Resolution',
@@ -202,6 +207,10 @@ export function getTicketsForKpi(tickets, kpiKey, context = {}) {
         const links = t.team_links ?? [];
         return team ? links.some((l) => l.team === team) : links.length > 0;
       });
+    }
+    case KPI_KEYS.PRODUCT: {
+      const product = context?.product;
+      return product ? tickets.filter((t) => t.sinch?.product === product) : tickets;
     }
     case KPI_KEYS.FCR:
       return tickets.filter((t) => (t.solved_at || t.closed_at) && (t.reopen_count ?? 0) === 0);

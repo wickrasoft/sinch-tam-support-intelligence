@@ -7,6 +7,7 @@ import PriorityChart from './PriorityChart';
 import SlaBreachChart from './SlaBreachChart';
 import RegionDistributionPanel from './RegionDistributionPanel';
 import TeamEscalationsPanel from './TeamEscalationsPanel';
+import ProductMixPanel from './ProductMixPanel';
 import SinchIncidentsPanel from './SinchIncidentsPanel';
 import SinchMonitorPanel from './SinchMonitorPanel';
 import CsatsSection from './CsatsSection';
@@ -116,7 +117,10 @@ export default function OverviewDashboard({
         />
       </section>
 
-      <TeamEscalationsPanel tickets={teamLinkTickets ?? filteredTickets} onDrilldown={onDrilldown} />
+      <section className="grid grid--2">
+        <TeamEscalationsPanel tickets={teamLinkTickets ?? filteredTickets} onDrilldown={onDrilldown} />
+        <ProductMixPanel tickets={filteredTickets} onDrilldown={onDrilldown} />
+      </section>
 
       <section className="grid grid--2 grid--status">
         <SinchIncidentsPanel
