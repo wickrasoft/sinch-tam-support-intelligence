@@ -381,6 +381,10 @@ export function computeSummary(tickets, allTickets, filters) {
   const resolvedCount = getResolvedTicketsInPeriod(tickets, filters).length;
   const closedInPeriodCount = getClosedTicketsInPeriod(tickets, filters).length;
 
+  // Reopen rate: share of resolved tickets that bounced back (reopened) in the
+  // period. A core quality-of-fix signal for operational excellence.
+  const reopenRate = resolvedCount ? (ticketsWithReopens / resolvedCount) * 100 : 0;
+
   // First Contact Resolution: tickets that reached a resolution (solved/closed)
   // without ever being reopened, as a share of all resolved tickets.
   const fcrBase = tickets.filter((t) => t.solved_at || t.closed_at);
@@ -433,6 +437,7 @@ export function computeSummary(tickets, allTickets, filters) {
     avgMttr,
     reopenings,
     ticketsWithReopens,
+    reopenRate,
     resolvedCount,
     closedInPeriodCount,
     fcrCount,

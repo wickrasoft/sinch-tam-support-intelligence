@@ -25,6 +25,7 @@ export const KPI_KEYS = {
   MTTA: 'mtta',
   MTTR: 'mttr',
   REOPENINGS: 'reopenings',
+  REOPEN_RATE: 'reopen_rate',
   CSAT_RESPONSE: 'csat_response',
   RESOLVED: 'resolved',
   CLOSED: 'closed',
@@ -87,6 +88,10 @@ export const KPI_CONFIG = {
   [KPI_KEYS.REOPENINGS]: {
     title: 'Ticket Reopenings',
     description: 'Tickets reopened after initial resolution within the selected period.',
+  },
+  [KPI_KEYS.REOPEN_RATE]: {
+    title: 'Reopen Rate',
+    description: 'Share of resolved tickets that were reopened in the selected period — a quality-of-fix signal. Lower is better.',
   },
   [KPI_KEYS.CSAT_RESPONSE]: {
     title: 'CSAT Response Rate',
@@ -158,6 +163,7 @@ export function getTicketsForKpi(tickets, kpiKey, context = {}) {
         .filter((t) => getTicketMttrMinutes(t) != null)
         .sort((a, b) => getTicketMttrMinutes(b) - getTicketMttrMinutes(a));
     case KPI_KEYS.REOPENINGS:
+    case KPI_KEYS.REOPEN_RATE:
       if (allTickets && filters) {
         return getReopenedTicketsInPeriod(allTickets, filters);
       }
@@ -218,7 +224,7 @@ export function getAccountBreakdown(tickets, kpiKey, filters) {
     }
     const row = map.get(key);
     row.count += 1;
-    if (kpiKey === KPI_KEYS.REOPENINGS && filters) {
+    if ((kpiKey === KPI_KEYS.REOPENINGS || kpiKey === KPI_KEYS.REOPEN_RATE) && filters) {
       row.reopenEvents += countTicketReopenEventsInPeriod(t, filters);
     }
     if (getTicketMttaMinutes(t) != null) row.avgMtta.push(getTicketMttaMinutes(t));
@@ -282,6 +288,7 @@ export function getKpiFilterPatch(kpiKey) {
     case KPI_KEYS.SLA:
       return { priority: '', disposition: '', slaBreachOnly: true, kpiFilter: null };
     case KPI_KEYS.REOPENINGS:
+    case KPI_KEYS.REOPEN_RATE:
       return { priority: '', disposition: '', slaBreachOnly: false, kpiFilter: 'reopenings' };
     case KPI_KEYS.NEEDS_ATTENTION:
       return { priority: '', disposition: '', slaBreachOnly: false, kpiFilter: KPI_KEYS.NEEDS_ATTENTION };
@@ -345,6 +352,15 @@ export function formatKpiComparison(kpiKey, summary, comparison, previousSummary
     case KPI_KEYS.REOPENINGS:
       rows.push({ label: 'Reopen events', current: summary.reopenings, prior: previousSummary?.reopenings, delta: comparison?.reopenings });
       rows.push({ label: 'Tickets reopened', current: summary.ticketsWithReopens, prior: previousSummary?.ticketsWithReopens });
+      break;
+    case KPI_KEYS.REOPEN_RATE:
+      rows.push({
+        label: 'Reopen rate',
+        current: `${(summary.reopenRate ?? 0).toFixed(1)}%`,
+        prior: previousSummary?.reopenRate != null ? `${previousSummary.reopenRate.toFixed(1)}%` : '—',
+      });
+      rows.push({ label: 'Tickets reopened', current: summary.ticketsWithReopens, prior: previousSummary?.ticketsWithReopens });
+      rows.push({ label: 'Tickets resolved', current: summary.resolvedCount, prior: previousSummary?.resolvedCount });
       break;
     case KPI_KEYS.CSAT_RESPONSE:
       rows.push({ label: 'Response rate', current: summary.csatPct != null ? `${summary.csatPct.toFixed(0)}%` : '—', prior: previousSummary?.csatPct != null ? `${previousSummary.csatPct.toFixed(0)}%` : '—' });

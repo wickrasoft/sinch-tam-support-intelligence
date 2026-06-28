@@ -48,6 +48,8 @@ export default function KPICards({
   }, [tams, referenceDate, now]);
 
   const fcrPctLabel = summary.fcrPct != null ? `${summary.fcrPct.toFixed(0)}%` : '—';
+  const reopenRate = summary.reopenRate ?? 0;
+  const reopenRateLabel = `${reopenRate.toFixed(1)}%`;
   const incidentSub = incidentStatus === 'loading'
     ? 'Loading from status.sinch.com…'
     : incidentStatus === 'error'
@@ -78,13 +80,6 @@ export default function KPICards({
       sub: 'High priority in period',
       accent: 'high',
       delta: comparison?.p2Count,
-    },
-    {
-      key: KPI_KEYS.P1_INCIDENTS,
-      title: 'P1 Incidents',
-      value: summary.p1IncidentCount ?? 0,
-      sub: 'SEV1 INC raised in period',
-      accent: (summary.p1IncidentCount ?? 0) > 0 ? 'critical' : 'neutral',
     },
     {
       key: KPI_KEYS.NEEDS_ATTENTION,
@@ -157,6 +152,13 @@ export default function KPICards({
       sub: `${summary.ticketsWithReopens} tickets reopened`,
       accent: summary.reopenings > 10 ? 'warn' : 'neutral',
       delta: comparison?.reopenings,
+    },
+    {
+      key: KPI_KEYS.REOPEN_RATE,
+      title: 'Reopen Rate',
+      value: reopenRateLabel,
+      sub: `${summary.ticketsWithReopens} of ${summary.resolvedCount} resolved reopened`,
+      accent: reopenRate > 10 ? 'warn' : reopenRate > 0 ? 'neutral' : 'good',
     },
     {
       key: KPI_KEYS.CSAT_RESPONSE,
