@@ -3157,6 +3157,10 @@ a.kpi-card {
   margin-bottom: 0.75rem;
 }
 
+.tam-overview-panel__title-row {
+  align-items: flex-start;
+}
+
 .tam-overview-panel__title-row .tam-overview-online {
   flex-direction: column;
   align-items: flex-end;
