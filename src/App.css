@@ -351,6 +351,32 @@ body {
   opacity: 1;
 }
 
+a.kpi-card {
+  text-decoration: none;
+}
+
+.kpi-card__hint--live {
+  opacity: 1;
+  color: var(--good);
+  font-weight: 600;
+}
+
+.kpi-card__live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  background: var(--good);
+  vertical-align: middle;
+  animation: kpi-live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes kpi-live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
+}
+
 /* KPI drill-down modal */
 .kpi-drill-overlay {
   position: fixed;
@@ -3159,6 +3185,14 @@ body {
   gap: 0.35rem;
 }
 
+/* On narrow screens the two-up legend can't fit each item's label/project/value,
+   so adjacent entries overlap — collapse to a single column. */
+@media (max-width: 720px) {
+  .tam-region-legend--stacked {
+    grid-template-columns: 1fr;
+  }
+}
+
 .tam-region-legend--stacked .tam-region-legend__item {
   padding: 0.45rem 0.6rem;
   font-size: 0.92rem;
@@ -3681,6 +3715,33 @@ body {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
+}
+
+.tam-overview-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--good);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tam-overview-live__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--good);
+  animation: tam-live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes tam-live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
 }
 
 .tam-overview-online {
@@ -5496,4 +5557,304 @@ body {
 .tam-ooo__row--clickable:focus-visible {
   outline: 2px solid #6b73d6;
   outline-offset: 1px;
+}
+
+/* Sinch Service Incidents (live from status.sinch.com) */
+.sinc-inc__header { display: block; }
+
+.sinc-inc__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sinc-inc__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.sinc-inc__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--warn);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+
+.sinc-inc__source {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.sinc-inc__subtitle {
+  margin: 0.45rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.sinc-inc__link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.sinc-inc__link:hover { text-decoration: underline; }
+
+/* Status row: incidents (left) + uptime monitor (right), 50/50 */
+.grid--status {
+  align-items: stretch;
+}
+
+.grid--status > .panel {
+  margin-bottom: 0;
+  height: 100%;
+}
+
+.sinc-mon {
+  display: flex;
+  flex-direction: column;
+}
+
+.sinc-mon__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sinc-mon__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.sinc-mon__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--good);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+}
+
+.sinc-mon__source {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.sinc-mon__subtitle {
+  margin: 0.45rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.sinc-mon__link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.sinc-mon__link:hover { text-decoration: underline; }
+
+.sinc-mon__frame-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  margin-top: 0.75rem;
+  height: 540px;
+  min-height: 540px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ebebef;
+}
+
+/* monitor.sinch.com is cross-origin, so its own header (logo + title + the
+   status.sinch.com line) and footer ("Powered by Checkly") can't be hidden via
+   CSS. Offset the iframe upward and oversize it so the wrapper clips the header
+   off the top; the footer sits far below the visible window so it never shows. */
+.sinc-mon__frame {
+  position: absolute;
+  top: -150px;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 150px);
+  border: 0;
+  display: block;
+  background: #ebebef;
+  /* Lock the embed to a fixed snapshot of the top checks: with no scrolling the
+     user can't reach the monitor page's footer ("Powered by Checkly" / repeated
+     header), which can't be hidden via CSS because the iframe is cross-origin.
+     Wheel events fall through to the dashboard, and "Open monitor" gives full
+     interactive access. */
+  pointer-events: none;
+}
+
+/* The monitor page header grows as the iframe narrows (its status.sinch.com
+   description wraps onto more lines), so the crop offset has to step up on
+   smaller screens to keep the header fully clipped. */
+@media (max-width: 720px) {
+  .sinc-mon__frame { top: -175px; height: calc(100% + 175px); }
+}
+@media (max-width: 600px) {
+  .sinc-mon__frame { top: -195px; height: calc(100% + 195px); }
+}
+@media (max-width: 480px) {
+  .sinc-mon__frame { top: -215px; height: calc(100% + 215px); }
+}
+@media (max-width: 414px) {
+  .sinc-mon__frame { top: -240px; height: calc(100% + 240px); }
+}
+
+.sinc-mon__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* On small screens drop the source pill onto its own line so it can't be
+   clipped by the panel edge / scrollbar. */
+@media (max-width: 600px) {
+  .sinc-mon__title-row,
+  .sinc-inc__title-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.sinc-inc__empty {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.sinc-inc__empty--error { color: var(--high); }
+
+.sinc-inc__retry {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 5px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+.sinc-inc__retry:hover { background: var(--bg-panel-hover); }
+
+.sinc-inc__list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sinc-inc__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border);
+}
+.sinc-inc__item:first-child { border-top: none; }
+
+.sinc-inc__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sinc-inc__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sinc-inc__name {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sinc-inc__name:hover { color: var(--accent); text-decoration: underline; }
+
+.sinc-inc__components {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sinc-inc__times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.85rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.sinc-inc__times-label {
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.75;
+}
+
+.sinc-inc__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.sinc-inc__status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+}
+.sinc-inc__status--active {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.18);
+}
+.sinc-inc__status--resolved {
+  color: var(--good);
+  background: rgba(16, 185, 129, 0.16);
+}
+
+.sinc-inc__time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .sinc-inc__item { flex-wrap: wrap; }
+  .sinc-inc__meta { flex-direction: row; align-items: center; gap: 0.5rem; margin-left: 1.5rem; }
 }

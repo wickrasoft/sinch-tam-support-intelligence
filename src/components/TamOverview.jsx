@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns';
 import TamStatusIcon from './TamStatusIcon';
 import TamOOOPanel from './TamOOOPanel';
 import TeamsShiftsModal from './TeamsShiftsModal';
-import { formatDurationHours, csatIndicator, getPortfolioActivityBreakdown, sumPortfolioActivityBreakdown } from '../utils/metrics';
+import { formatDurationHours, csatIndicator, getPortfolioActivityBreakdown } from '../utils/metrics';
 import { computeHealthScore, healthIndicator } from '../utils/health';
 import { KPI_KEYS } from '../utils/kpiDrilldown';
 import { formatAccountCount, formatTamDisplayName, countryFlag } from '../utils/text';
@@ -49,7 +49,7 @@ function DispositionBar({ counts }) {
   const total = openKeys.reduce((sum, key) => sum + (counts[key] ?? 0), 0) || 1;
 
   return (
-    <div className="disp-bar" title="Open ticket disposition breakdown (created in period)">
+    <div className="disp-bar" title="Open ticket disposition breakdown (opened by clients in period)">
       {openKeys.map((key) => {
         const pct = ((counts[key] ?? 0) / total) * 100;
         if (pct < 1) return null;
@@ -67,24 +67,29 @@ function DispositionBar({ counts }) {
 }
 
 const PORTFOLIO_STAT_ITEMS = [
-  { key: 'p1p2', label: 'P1/P2', tone: 'critical', title: 'P1 and P2 tickets created in period — click to drill down', kpiKey: KPI_KEYS.P1P2 },
-  { key: 'p3p5', label: 'P3-P5', title: 'P3, P4, and P5 tickets created in period — click to drill down', kpiKey: KPI_KEYS.P3P5 },
-  { key: 'created', label: 'Created', title: 'Tickets created in the selected period — click to drill down', kpiKey: KPI_KEYS.CREATED },
-  { key: 'ip', label: 'IP', title: 'In progress (created in period) — click to drill down', kpiKey: KPI_KEYS.PORTFOLIO_IP },
-  { key: 'esc', label: 'Esc', title: 'Escalated (created in period) — click to drill down', kpiKey: KPI_KEYS.PORTFOLIO_ESC },
-  { key: 'wfr', label: 'WFR', title: 'Waiting for response (created in period) — click to drill down', kpiKey: KPI_KEYS.PORTFOLIO_WFR },
+  { key: 'p1p2', label: 'P1/P2', tone: 'critical', title: 'P1 and P2 tickets opened by clients in period — click to drill down', kpiKey: KPI_KEYS.P1P2 },
+  { key: 'p3p5', label: 'P3-P5', title: 'P3, P4, and P5 tickets opened by clients in period — click to drill down', kpiKey: KPI_KEYS.P3P5 },
+  { key: 'esc', label: 'Esc', title: 'Escalated (opened by clients in period) — click to drill down', kpiKey: KPI_KEYS.PORTFOLIO_ESC },
+  {
+    key: 'handled',
+    label: 'Total',
+    title: 'Total tickets handled in the selected period (opened in period + resolved/closed/reopened in period) — click to drill down',
+    kpiKey: KPI_KEYS.HANDLED,
+  },
+  { key: 'ip', label: 'IP', title: 'In progress (opened by clients in period) — click to drill down', kpiKey: KPI_KEYS.PORTFOLIO_IP },
+  { key: 'wfr', label: 'WFR', title: 'Waiting for response (opened by clients in period) — click to drill down', kpiKey: KPI_KEYS.PORTFOLIO_WFR },
   {
     key: 'resolved',
     label: 'Resolved',
     tone: 'good',
-    title: 'Created in period and resolved in period — click to drill down',
+    title: 'Opened by clients in period and resolved in period — click to drill down',
     kpiKey: KPI_KEYS.RESOLVED,
   },
   {
     key: 'closed',
     label: 'Closed',
     tone: 'closed',
-    title: 'Created in period and closed in period — click to drill down',
+    title: 'Opened by clients in period and closed in period — click to drill down',
     kpiKey: KPI_KEYS.CLOSED,
   },
 ];
@@ -97,6 +102,7 @@ const DISPOSITION_KPI_KEYS = {
 };
 
 function getPortfolioStatValue(key, metrics) {
+  if (key === 'handled') return metrics.handledCount ?? 0;
   const breakdown = metrics.activityBreakdown ?? getPortfolioActivityBreakdown(metrics);
   return breakdown[key] ?? 0;
 }
@@ -172,27 +178,18 @@ function PortfolioStatCells({ metrics, onDrilldown, tamId }) {
   );
 }
 
-function PortfolioSummaryBar({ breakdown, total, portfolioCsat, portfolioCsatStyle, onDrilldown }) {
+function PortfolioSummaryBar({ breakdown, portfolioCsat, portfolioCsatStyle, onDrilldown }) {
   const openDrilldown = (kpiKey) => {
     onDrilldown?.(kpiKey);
   };
 
   return (
     <div className="tam-overview-summary tam-overview-summary--compact tam-overview-summary--single-row">
-      <button
-        type="button"
-        className="tam-overview-summary__item tam-overview-summary__item--total tam-overview-summary__item--clickable"
-        title="All tickets created in period — click to drill down"
-        onClick={() => openDrilldown(KPI_KEYS.CREATED)}
-      >
-        <span className="tam-overview-summary__label">Total</span>
-        <span className="tam-overview-summary__value">{total}</span>
-      </button>
       {PORTFOLIO_STAT_ITEMS.map(({ key, label, kpiKey, title }) => (
         <button
           key={key}
           type="button"
-          className="tam-overview-summary__item tam-overview-summary__item--clickable"
+          className={`tam-overview-summary__item tam-overview-summary__item--clickable${key === 'handled' ? ' tam-overview-summary__item--total' : ''}`}
           title={title}
           onClick={() => openDrilldown(kpiKey)}
         >
@@ -301,27 +298,27 @@ function TamDetail({ tam, tamMeta, availabilityStatus, availabilityDetails, onSe
         <TamStatCell
           label="Resolved"
           value={tam.metrics.resolvedCount ?? 0}
-          title="Tickets created in period and resolved during the period — click to drill down"
+          title="Tickets opened by clients in period and resolved during the period — click to drill down"
           onClick={(e) => openDrilldown(KPI_KEYS.RESOLVED, e)}
           tone="good"
         />
         <TamStatCell
           label="Closed"
           value={tam.metrics.closedInPeriodCount ?? 0}
-          title="Tickets created in period and closed during the period — click to drill down"
+          title="Tickets opened by clients in period and closed during the period — click to drill down"
           onClick={(e) => openDrilldown(KPI_KEYS.CLOSED, e)}
           tone="closed"
         />
         <TamStatCell
           label="MTTA"
           value={formatDurationHours(tam.metrics.avgMtta)}
-          title="Mean time to acknowledge (hours, created in period) — click to drill down"
+          title="Mean time to acknowledge (hours, opened by clients in period) — click to drill down"
           onClick={(e) => openDrilldown(KPI_KEYS.MTTA, e)}
         />
         <TamStatCell
           label="MTTR"
           value={formatDurationHours(tam.metrics.avgMttr)}
-          title="Mean time to resolve (hours, created in period) — click to drill down"
+          title="Mean time to resolve (hours, opened by clients in period) — click to drill down"
           onClick={(e) => openDrilldown(KPI_KEYS.MTTR, e)}
         />
         <TamStatCell
@@ -373,10 +370,10 @@ function TamDetail({ tam, tamMeta, availabilityStatus, availabilityDetails, onSe
             <button
               type="button"
               className="tam-account-row__stat tam-account-row__stat--clickable"
-              title="Tickets created in period — click to drill down"
-              onClick={(e) => openDrilldown(KPI_KEYS.CREATED, e, { accountId: acc.id })}
+              title="Tickets handled in period (opened in period + resolved/closed/reopened in period) — click to drill down"
+              onClick={(e) => openDrilldown(KPI_KEYS.HANDLED, e, { accountId: acc.id })}
             >
-              {acc.ticketCount} created
+              {acc.metrics.handledCount ?? 0} handled
             </button>
             <button
               type="button"
@@ -432,7 +429,7 @@ export default function TamOverview({
   const [shiftsScope, setShiftsScope] = useState(null);
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60_000);
+    const timer = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(timer);
   }, []);
 
@@ -494,16 +491,12 @@ export default function TamOverview({
   }, [tamMetrics, allTams, selectedRegion]);
 
   const portfolioBreakdown = displayTams.reduce(
-    (acc, tam) => {
-      const breakdown = tam.metrics.activityBreakdown ?? getPortfolioActivityBreakdown(tam.metrics);
-      return PORTFOLIO_STAT_ITEMS.reduce(
-        (row, { key }) => ({ ...row, [key]: row[key] + (breakdown[key] ?? 0) }),
-        acc,
-      );
-    },
+    (acc, tam) => PORTFOLIO_STAT_ITEMS.reduce(
+      (row, { key }) => ({ ...row, [key]: row[key] + getPortfolioStatValue(key, tam.metrics) }),
+      acc,
+    ),
     Object.fromEntries(PORTFOLIO_STAT_ITEMS.map(({ key }) => [key, 0])),
   );
-  const portfolioTotal = sumPortfolioActivityBreakdown(portfolioBreakdown);
   const portfolioCsatValues = displayTams
     .map((tam) => tam.metrics.avgCsat)
     .filter((value) => value != null);
@@ -517,7 +510,11 @@ export default function TamOverview({
       <header className="panel__header">
         <div className="ops-panel__title-row tam-overview-panel__title-row">
           <h2>TAM Portfolio &amp; Availability</h2>
-          <div className="tam-overview-online" title="TAMs currently online">
+          <span className="tam-overview-live" title="Availability updates in real time (every 30s)">
+            <span className="tam-overview-live__dot" aria-hidden="true" />
+            Live
+          </span>
+          <div className="tam-overview-online" title="TAMs currently online (real-time)">
             <span className="tam-overview-online__label">Online</span>
             <span className="ops-panel__count ops-panel__count--good">
               {onlineCount}/{allTams.length}
@@ -526,7 +523,6 @@ export default function TamOverview({
         </div>
         <PortfolioSummaryBar
           breakdown={portfolioBreakdown}
-          total={portfolioTotal}
           portfolioCsat={portfolioCsat}
           portfolioCsatStyle={portfolioCsatStyle}
           onDrilldown={onDrilldown}
@@ -541,7 +537,6 @@ export default function TamOverview({
             ? getTamAvailabilityStatus(tamMeta, referenceDate, now)
             : 'online';
           const availabilityDetails = tamMeta ? getAvailabilityDetails(tamMeta, availabilityStatus) : [];
-          const activityTotal = tam.metrics.activityTotal ?? sumPortfolioActivityBreakdown(getPortfolioActivityBreakdown(tam.metrics));
 
           return (
             <div key={tam.tam_id} className={`tam-card tam-card--expandable ${expanded ? 'tam-card--expanded' : ''}`}>
@@ -583,18 +578,6 @@ export default function TamOverview({
                     <div className="tam-card__corner">
                       <div className="tam-card__badge-group">
                         <TamCardAccountsBadge count={tam.accounts?.length ?? 0} />
-                        <button
-                          type="button"
-                          className="tam-card__badge tam-card__badge--total tam-card__badge--clickable"
-                          title="All tickets created in period — click to drill down"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDrilldown?.(KPI_KEYS.CREATED, { tamId: tam.tam_id });
-                          }}
-                        >
-                          <span className="tam-card__badge-label">Total</span>
-                          <span className="tam-card__badge-value">{activityTotal}</span>
-                        </button>
                         <TamCardCsatBadge
                           avgCsat={tam.metrics.avgCsat}
                           tamId={tam.tam_id}

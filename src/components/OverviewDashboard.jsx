@@ -7,6 +7,8 @@ import PriorityChart from './PriorityChart';
 import SlaBreachChart from './SlaBreachChart';
 import RegionDistributionPanel from './RegionDistributionPanel';
 import TeamEscalationsPanel from './TeamEscalationsPanel';
+import SinchIncidentsPanel from './SinchIncidentsPanel';
+import SinchMonitorPanel from './SinchMonitorPanel';
 import CsatsSection from './CsatsSection';
 import ResponseTimeChart from './ResponseTimeChart';
 import ReopeningsChart from './ReopeningsChart';
@@ -24,6 +26,7 @@ export default function OverviewDashboard({
   filters,
   referenceDate,
   publicHolidays,
+  sinchIncidents,
   staleThresholdId,
   onStaleThresholdChange,
   agingThresholdId,
@@ -35,7 +38,6 @@ export default function OverviewDashboard({
   attentionTickets,
   onOpenAttentionDrilldown,
   atRiskAccounts,
-  onSelectAccount,
   onAccountHealthDrilldown,
   onOpenAtRiskDrilldown,
   accountMetrics,
@@ -50,7 +52,15 @@ export default function OverviewDashboard({
 }) {
   return (
     <>
-      <KPICards summary={summary} comparison={comparison} onDrilldown={onDrilldown} />
+      <KPICards
+        summary={summary}
+        comparison={comparison}
+        onDrilldown={onDrilldown}
+        tams={tams}
+        referenceDate={referenceDate}
+        incidentCount={sinchIncidents?.activeCount ?? 0}
+        incidentStatus={sinchIncidents?.status ?? 'loading'}
+      />
 
       <OperationalPanels
         tams={tams}
@@ -107,6 +117,17 @@ export default function OverviewDashboard({
       </section>
 
       <TeamEscalationsPanel tickets={teamLinkTickets ?? filteredTickets} onDrilldown={onDrilldown} />
+
+      <section className="grid grid--2 grid--status">
+        <SinchIncidentsPanel
+          incidents={sinchIncidents?.incidents ?? []}
+          status={sinchIncidents?.status ?? 'loading'}
+          updatedAt={sinchIncidents?.updatedAt ?? null}
+          activeCount={sinchIncidents?.activeCount ?? 0}
+          onRetry={sinchIncidents?.reload}
+        />
+        <SinchMonitorPanel />
+      </section>
 
       <CsatsSection
         summary={summary}

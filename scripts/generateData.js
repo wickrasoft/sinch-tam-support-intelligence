@@ -25,6 +25,9 @@ const TAMS = [
   { id: 'tam-013', name: 'Aisha Rahman', email: 'aisha.rahman@sinch.com', region: 'APAC', country: 'India' },
   { id: 'tam-014', name: 'Liam O\'Brien', email: 'liam.obrien@sinch.com', region: 'EMEA', country: 'United Kingdom' },
   { id: 'tam-015', name: 'Nina Kowalski', email: 'nina.kowalski@sinch.com', region: 'US', country: 'United States' },
+  { id: 'tam-016', name: 'Camille Dubois', email: 'camille.dubois@sinch.com', region: 'EMEA', country: 'France' },
+  { id: 'tam-017', name: 'Mads Nielsen', email: 'mads.nielsen@sinch.com', region: 'EMEA', country: 'Denmark' },
+  { id: 'tam-018', name: 'Ava Thompson', email: 'ava.thompson@sinch.com', region: 'US', country: 'United States' },
 ];
 
 const ACCOUNT_DEFS = [
@@ -53,6 +56,12 @@ const ACCOUNT_DEFS = [
   { name: 'Summit Outdoor Gear', tam_id: 'tam-015', tier: 'Mid-Market', industry: 'Retail' },
   { name: 'Vertex Aerospace', tam_id: 'tam-015', tier: 'Enterprise', industry: 'Aerospace' },
   { name: 'Urban Mobility Inc', tam_id: 'tam-005', tier: 'Enterprise', industry: 'Transportation' },
+  { name: 'Lumière Media', tam_id: 'tam-016', tier: 'Enterprise', industry: 'Media' },
+  { name: 'Banque Atlantique', tam_id: 'tam-016', tier: 'Enterprise', industry: 'Finance' },
+  { name: 'Nordic Logistics A/S', tam_id: 'tam-017', tier: 'Mid-Market', industry: 'Logistics' },
+  { name: 'Copenhagen FinTech', tam_id: 'tam-017', tier: 'Enterprise', industry: 'Finance' },
+  { name: 'Liberty Health Group', tam_id: 'tam-018', tier: 'Enterprise', industry: 'Healthcare' },
+  { name: 'Pioneer Logistics US', tam_id: 'tam-018', tier: 'Mid-Market', industry: 'Logistics' },
 ];
 
 const ACCOUNTS = ACCOUNT_DEFS.map((a, i) => ({
@@ -120,6 +129,8 @@ const COUNTRY_TIMEZONES = {
   China: 'Asia/Shanghai',
   Australia: 'Australia/Sydney',
   Sweden: 'Europe/Stockholm',
+  France: 'Europe/Paris',
+  Denmark: 'Europe/Copenhagen',
   'United Kingdom': 'Europe/London',
   'United Arab Emirates': 'Asia/Dubai',
 };
@@ -356,6 +367,8 @@ const COUNTRY_HOLIDAY_NAMES = {
   China: ['Dragon Boat Festival', 'Mid-Autumn Festival', 'National Day'],
   Australia: ['Queen\u2019s Birthday', 'Labour Day', 'Picnic Day'],
   Sweden: ['Midsommarafton', 'Nationaldagen', 'Kristi himmelsf\u00e4rdsdag'],
+  France: ['F\u00eate Nationale', 'Assomption', 'Lundi de Pentec\u00f4te'],
+  Denmark: ['Grundlovsdag', 'Store Bededag', 'Kristi himmelfartsdag'],
   'United Kingdom': ['Summer Bank Holiday', 'Spring Bank Holiday', 'Early May Bank Holiday'],
   'United Arab Emirates': ['Islamic New Year', 'Eid al-Adha (obs.)', 'Commemoration Day'],
 };
@@ -959,16 +972,32 @@ function getDatasetEndDate() {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59));
 }
 
+// Target organisation-wide ticket volume. Tickets are spread uniformly across
+// the trailing HISTORY_DAYS window, so the average daily created count lands
+// close to TARGET_TICKETS_PER_DAY. The window is bounded (rather than running
+// back to 2024) to keep the generated JSON small enough to load in the browser.
+const TARGET_TICKETS_PER_DAY = 30;
+const HISTORY_DAYS = 365;
+
 function generateDataset() {
   const rng = seededRandom(42);
   const endDate = getDatasetEndDate();
-  const startDate = new Date('2024-01-01T00:00:00Z');
+  const dayMs = 24 * 60 * 60 * 1000;
+  const startDate = new Date(endDate.getTime() - HISTORY_DAYS * dayMs);
   const tickets = [];
   let ticketId = 1;
 
+  // Distribute the target total across accounts proportional to their volume
+  // weight so busier accounts still generate proportionally more tickets.
+  const targetTotal = TARGET_TICKETS_PER_DAY * HISTORY_DAYS;
+  const totalVolume = ACCOUNTS.reduce(
+    (sum, account) => sum + (ACCOUNT_PROFILES[account.id]?.volume ?? 1),
+    0,
+  );
+
   for (const account of ACCOUNTS) {
     const profile = ACCOUNT_PROFILES[account.id];
-    const ticketCount = Math.round(90 * profile.volume * 2.5);
+    const ticketCount = Math.max(1, Math.round((targetTotal * profile.volume) / totalVolume));
 
     for (let i = 0; i < ticketCount; i++) {
       const createdAt = randomDate(rng, startDate, endDate);

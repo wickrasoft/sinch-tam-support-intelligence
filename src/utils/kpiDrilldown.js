@@ -5,6 +5,7 @@ import {
   getCsatOfferedTicketsInPeriod,
   getResolvedTicketsInPeriod,
   getClosedTicketsInPeriod,
+  getTicketsHandledListInPeriod,
   getTicketMttaMinutes,
   getTicketMttrMinutes,
   countTicketReopenEventsInPeriod,
@@ -29,6 +30,9 @@ export const KPI_KEYS = {
   CLOSED: 'closed',
   NEEDS_ATTENTION: 'needs_attention',
   TEAM_LINKS: 'team_links',
+  FCR: 'fcr',
+  P1_INCIDENTS: 'p1_incidents',
+  HANDLED: 'handled',
 };
 
 export const KPI_CONFIG = {
@@ -42,27 +46,27 @@ export const KPI_CONFIG = {
   },
   [KPI_KEYS.P1P2]: {
     title: 'P1/P2 Tickets',
-    description: 'Critical and high priority tickets created in the selected period.',
+    description: 'Critical and high priority tickets opened by clients in the selected period.',
   },
   [KPI_KEYS.P3P5]: {
     title: 'P3–P5 Tickets',
-    description: 'Medium and lower priority tickets created in the selected period.',
+    description: 'Medium and lower priority tickets opened by clients in the selected period.',
   },
   [KPI_KEYS.CREATED]: {
     title: 'Tickets Created',
-    description: 'All tickets created in the selected period.',
+    description: 'All tickets opened by clients in the selected period.',
   },
   [KPI_KEYS.PORTFOLIO_IP]: {
     title: 'In Progress',
-    description: 'Tickets created in the period currently in progress.',
+    description: 'Tickets opened by clients in the period currently in progress.',
   },
   [KPI_KEYS.PORTFOLIO_ESC]: {
     title: 'Escalated',
-    description: 'Tickets created in the period that are escalated.',
+    description: 'Tickets opened by clients in the period that are escalated.',
   },
   [KPI_KEYS.PORTFOLIO_WFR]: {
     title: 'Waiting for Response',
-    description: 'Tickets created in the period waiting for customer response.',
+    description: 'Tickets opened by clients in the period waiting for customer response.',
   },
   [KPI_KEYS.SLA]: {
     title: 'SLA Breaches',
@@ -90,11 +94,11 @@ export const KPI_CONFIG = {
   },
   [KPI_KEYS.RESOLVED]: {
     title: 'Tickets Resolved',
-    description: 'Tickets created in the selected period that were marked solved during the same period.',
+    description: 'Tickets opened by clients in the selected period that were marked solved during the same period.',
   },
   [KPI_KEYS.CLOSED]: {
     title: 'Tickets Closed',
-    description: 'Tickets created in the selected period that were closed during the same period.',
+    description: 'Tickets opened by clients in the selected period that were closed during the same period.',
   },
   [KPI_KEYS.NEEDS_ATTENTION]: {
     title: 'Tickets Needing Attention',
@@ -103,6 +107,18 @@ export const KPI_CONFIG = {
   [KPI_KEYS.TEAM_LINKS]: {
     title: 'Linked Tickets by Team',
     description: 'Tickets linked across to another team via JIRA in the selected period.',
+  },
+  [KPI_KEYS.FCR]: {
+    title: 'First Contact Resolution',
+    description: 'Tickets resolved on first contact — solved or closed without ever being reopened, in the selected period.',
+  },
+  [KPI_KEYS.P1_INCIDENTS]: {
+    title: 'P1 Incidents (SEV1)',
+    description: 'SEV1 incident (INC) records auto-raised for P1 tickets in the selected period.',
+  },
+  [KPI_KEYS.HANDLED]: {
+    title: 'Tickets Handled',
+    description: 'Tickets worked in the selected period — opened by clients in the period, plus older tickets resolved, closed, or reopened during the period.',
   },
 };
 
@@ -170,6 +186,15 @@ export function getTicketsForKpi(tickets, kpiKey, context = {}) {
         return team ? links.some((l) => l.team === team) : links.length > 0;
       });
     }
+    case KPI_KEYS.FCR:
+      return tickets.filter((t) => (t.solved_at || t.closed_at) && (t.reopen_count ?? 0) === 0);
+    case KPI_KEYS.P1_INCIDENTS:
+      return tickets.filter((t) => t.incident?.severity === 'SEV1');
+    case KPI_KEYS.HANDLED:
+      if (allTickets && filters) {
+        return getTicketsHandledListInPeriod(allTickets, filters);
+      }
+      return tickets;
     default:
       return tickets;
   }
@@ -342,6 +367,22 @@ export function formatKpiComparison(kpiKey, summary, comparison, previousSummary
       break;
     case KPI_KEYS.CLOSED:
       rows.push({ label: 'Tickets closed', current: summary.closedInPeriodCount, prior: previousSummary?.closedInPeriodCount, delta: comparison?.closedInPeriodCount });
+      break;
+    case KPI_KEYS.FCR:
+      rows.push({ label: 'First contact resolutions', current: summary.fcrCount ?? 0, prior: previousSummary?.fcrCount });
+      rows.push({
+        label: 'FCR rate',
+        current: summary.fcrPct != null ? `${summary.fcrPct.toFixed(0)}%` : '—',
+        prior: previousSummary?.fcrPct != null ? `${previousSummary.fcrPct.toFixed(0)}%` : '—',
+      });
+      break;
+    case KPI_KEYS.P1_INCIDENTS:
+      rows.push({ label: 'SEV1 incidents (INC)', current: summary.p1IncidentCount ?? 0, prior: previousSummary?.p1IncidentCount });
+      rows.push({ label: 'P1 tickets', current: summary.p1Count, prior: previousSummary?.p1Count });
+      break;
+    case KPI_KEYS.HANDLED:
+      rows.push({ label: 'Tickets handled', current: summary.handledCount ?? 0, prior: previousSummary?.handledCount });
+      rows.push({ label: 'Opened by clients in period', current: summary.totalTickets, prior: previousSummary?.totalTickets, delta: comparison?.totalTickets });
       break;
     default:
       break;

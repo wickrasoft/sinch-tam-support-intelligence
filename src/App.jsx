@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { useDataset } from './hooks/useDataset';
+import { useSinchIncidents } from './hooks/useSinchIncidents';
 import DataLoadingScreen from './components/DataLoadingScreen';
 import AppTitle from './components/AppTitle';
 import ThemeSwitcher from './components/ThemeSwitcher';
@@ -79,6 +80,9 @@ function DashboardApp({ dataset }) {
   });
 
   const { tickets: allTickets, tams, accounts, meta } = dataset;
+
+  // Live Sinch status feed — shared by the KPI card and the incidents panel.
+  const sinchIncidents = useSinchIncidents();
 
   const activeFilters = useMemo(
     () => ({
@@ -642,6 +646,7 @@ function DashboardApp({ dataset }) {
             filters={filters}
             referenceDate={activeFilters.referenceDate}
             publicHolidays={meta.public_holidays}
+            sinchIncidents={sinchIncidents}
             staleThresholdId={staleThresholdId}
             onStaleThresholdChange={setStaleThresholdId}
             agingThresholdId={agingThresholdId}

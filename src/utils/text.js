@@ -26,6 +26,8 @@ const COUNTRY_FLAGS = {
   China: '🇨🇳',
   Australia: '🇦🇺',
   Sweden: '🇸🇪',
+  France: '🇫🇷',
+  Denmark: '🇩🇰',
   'United Kingdom': '🇬🇧',
   'United Arab Emirates': '🇦🇪',
 };

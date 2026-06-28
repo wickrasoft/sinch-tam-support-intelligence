@@ -269,6 +269,18 @@ export function getTicketsHandledInPeriod(allTickets, filters) {
   return getTicketsHandledBreakdown(allTickets, filters).totalCount;
 }
 
+// The actual list of tickets a TAM/account handled in the period: tickets opened
+// by clients in the period PLUS any older tickets that were resolved, closed, or
+// reopened during the period (work touched in the window regardless of open date).
+export function getTicketsHandledListInPeriod(allTickets, filters) {
+  const scope = getTicketScope(allTickets, filters);
+  const handled = new Map(filterTickets(allTickets, filters).map((t) => [t.id, t]));
+  for (const t of getResolvedTicketsInPeriod(scope, filters)) handled.set(t.id, t);
+  for (const t of getClosedTicketsInPeriod(scope, filters)) handled.set(t.id, t);
+  for (const t of getReopenedTicketsInPeriod(scope, filters)) handled.set(t.id, t);
+  return Array.from(handled.values());
+}
+
 export function getCsatOfferedTicketsInPeriod(tickets, filters) {
   const { start, end } = getPeriodBounds(filters.referenceDate, filters.period);
 
@@ -368,6 +380,15 @@ export function computeSummary(tickets, allTickets, filters) {
   const ticketsWithReopens = getReopenedTicketsInPeriod(allTickets, filters).length;
   const resolvedCount = getResolvedTicketsInPeriod(tickets, filters).length;
   const closedInPeriodCount = getClosedTicketsInPeriod(tickets, filters).length;
+
+  // First Contact Resolution: tickets that reached a resolution (solved/closed)
+  // without ever being reopened, as a share of all resolved tickets.
+  const fcrBase = tickets.filter((t) => t.solved_at || t.closed_at);
+  const fcrCount = fcrBase.filter((t) => (t.reopen_count ?? 0) === 0).length;
+  const fcrPct = fcrBase.length ? (fcrCount / fcrBase.length) * 100 : 0;
+
+  // P1 incidents = SEV1 INC records auto-raised for P1 Zendesk tickets in period.
+  const p1IncidentCount = tickets.filter((t) => t.incident?.severity === 'SEV1').length;
   const handledBreakdown = getTicketsHandledBreakdown(allTickets, filters);
   const handledCount = handledBreakdown.totalCount;
   const otherHandledCount = handledBreakdown.otherCount;
@@ -414,6 +435,9 @@ export function computeSummary(tickets, allTickets, filters) {
     ticketsWithReopens,
     resolvedCount,
     closedInPeriodCount,
+    fcrCount,
+    fcrPct,
+    p1IncidentCount,
     handledCount,
     otherHandledCount,
     activityBreakdown,

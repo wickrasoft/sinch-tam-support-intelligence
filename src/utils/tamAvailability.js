@@ -156,7 +156,9 @@ export function resolveTamAvailability(tam, referenceDate, liveNow = new Date(),
     };
   }
 
-  const status = workHoursStatus(tam, at);
+  // Presence (online/away/offline) always uses the live clock so the
+  // TAM Portfolio & Availability panel reflects real-time working hours.
+  const status = workHoursStatus(tam, liveNow);
   return {
     status,
     availability_status: status,
