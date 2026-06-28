@@ -41,9 +41,6 @@ export default function ProductMixPanel({ tickets, onDrilldown }) {
     <article className="panel region-panel panel--chart-drilldown">
       <header className="panel__header">
         <h2>Tickets by Product</h2>
-        <span className="panel__subtitle" style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-          Product mix matching the current filters
-        </span>
       </header>
 
       {sliceTotal === 0 ? (

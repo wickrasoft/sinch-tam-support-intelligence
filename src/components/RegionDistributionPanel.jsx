@@ -36,13 +36,13 @@ export default function RegionDistributionPanel({
         </h2>
       </header>
 
-      <div className={`region-panel__body ${embedded ? 'region-panel__body--embedded' : 'region-panel__body--stacked'}`}>
-        <div className={`region-panel__chart ${embedded ? 'region-panel__chart--embedded' : 'region-panel__chart--centered'}`}>
+      <div className={`region-panel__body ${embedded ? 'region-panel__body--embedded' : 'region-panel__body--vertical'}`}>
+        <div className={`region-panel__chart ${embedded ? 'region-panel__chart--embedded' : ''}`}>
           <RegionDistributionChart
             data={regionDistribution}
             selectedRegion={selectedRegion}
             onRegionClick={onRegionDrilldown}
-            height={embedded ? 132 : 360}
+            height={embedded ? 132 : 320}
           />
         </div>
 

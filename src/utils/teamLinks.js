@@ -12,6 +12,21 @@ export const PARTNER_TEAM_ORDER = [
   'P2P',
 ];
 
+// Short, dashboard-friendly labels for the escalations legend.
+export const PARTNER_TEAM_SHORT_LABELS = {
+  'Service Operations': 'ServOps',
+  Engineering: 'DevTria',
+  'Global Product': 'Global Product (GM)',
+  'Customer Dashboard': 'CDG',
+  'Anti-Fraud Analysis': 'AFA',
+  'Supplier Escalation': 'Supplier',
+  P2P: 'P2P',
+};
+
+export function teamShortLabel(team) {
+  return PARTNER_TEAM_SHORT_LABELS[team] ?? team;
+}
+
 export const PARTNER_TEAM_COLORS = {
   'Service Operations': '#2563eb',
   Engineering: '#9333ea',

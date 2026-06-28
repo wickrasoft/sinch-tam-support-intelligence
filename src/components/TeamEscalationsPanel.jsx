@@ -4,6 +4,7 @@ import {
   PARTNER_TEAM_COLORS,
   getTeamLinkDistribution,
   getTeamLinkTotals,
+  teamShortLabel,
 } from '../utils/teamLinks';
 import { KPI_KEYS } from '../utils/kpiDrilldown';
 
@@ -47,9 +48,6 @@ export default function TeamEscalationsPanel({ tickets, onDrilldown }) {
     <article className="panel region-panel panel--chart-drilldown">
       <header className="panel__header">
         <h2>Escalations (JIRA)</h2>
-        <span className="panel__subtitle" style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-          Escalations matching the current filters
-        </span>
       </header>
 
       {sliceTotal === 0 ? (
@@ -110,8 +108,7 @@ export default function TeamEscalationsPanel({ tickets, onDrilldown }) {
                       className="tam-region-legend__swatch"
                       style={{ background: PARTNER_TEAM_COLORS[row.team] ?? '#64748b' }}
                     />
-                    <span className="tam-region-legend__label">{row.team}</span>
-                    <span className="tam-region-legend__meta">{row.project}</span>
+                    <span className="tam-region-legend__label">{teamShortLabel(row.team)}</span>
                     <span className="tam-region-legend__connector" aria-hidden="true" />
                     <span className="tam-region-legend__value">{row.value}</span>
                     <span className="tam-region-legend__pct">{pct}%</span>

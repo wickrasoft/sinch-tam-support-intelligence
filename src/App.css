@@ -1046,6 +1046,12 @@ a.kpi-card {
   flex-shrink: 0;
 }
 
+.grid--sla-region .region-panel__body--vertical {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: start;
+}
+
 .grid--sla-region .region-panel__body--stacked {
   flex: 1 1 auto;
   min-height: 0;
