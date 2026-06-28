@@ -3227,6 +3227,16 @@ a.kpi-card {
   gap: 0.75rem;
 }
 
+/* Chart on top, stats listed underneath (instead of side-by-side). */
+.region-panel__body--vertical {
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.region-panel__body--vertical .region-chart {
+  margin: 0 auto;
+}
+
 .region-panel__chart {
   min-height: 260px;
 }

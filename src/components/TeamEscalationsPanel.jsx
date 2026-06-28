@@ -57,7 +57,7 @@ export default function TeamEscalationsPanel({ tickets, onDrilldown }) {
           No tickets in this view are linked to other teams.
         </p>
       ) : (
-        <div className="region-panel__body">
+        <div className="region-panel__body region-panel__body--vertical">
           <div className="region-panel__chart">
             <div className={`region-chart ${onDrilldown ? 'region-chart--drilldown' : ''}`}>
               <ResponsiveContainer width="100%" height={320}>
@@ -94,7 +94,7 @@ export default function TeamEscalationsPanel({ tickets, onDrilldown }) {
           </div>
 
           <ul className="tam-region-legend tam-region-legend--stacked">
-            {distribution.map((row) => {
+            {distribution.slice(0, 6).map((row) => {
               const pct = sliceTotal
                 ? ((row.value / sliceTotal) * 100).toFixed(0)
                 : '0';
