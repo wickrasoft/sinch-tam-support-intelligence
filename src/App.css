@@ -5775,14 +5775,24 @@ a.kpi-card {
 .sinc-mon__swatch--unknown { background: var(--text-muted); box-shadow: none; }
 
 .sinc-mon__body {
+  position: relative;
   margin-top: 0.75rem;
-  flex: 1 1 auto;
-  min-height: 240px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* Fills the height set by the sibling panel. The scroll content is absolutely
+     positioned inside so the (tall) check list never inflates the grid row. */
+  flex: 1 1 0;
+  min-height: 200px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--bg-elevated, rgba(255, 255, 255, 0.02));
+  overflow: hidden;
+}
+
+.sinc-mon__scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: inherit;
 }
 
 .sinc-mon__empty {

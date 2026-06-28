@@ -165,19 +165,21 @@ export default function SinchMonitorPanel() {
       </header>
 
       <div className="sinc-mon__body">
-        {status === 'error' && (
-          <p className="sinc-mon__empty">
-            Couldn’t load uptime data right now. <a href={MONITOR_URL} target="_blank" rel="noopener noreferrer" className="sinc-mon__link">View on monitor.sinch.com ↗</a>
-          </p>
-        )}
-        {status === 'loading' && (
-          <p className="sinc-mon__empty">Loading external uptime checks…</p>
-        )}
-        {status === 'ready' && (
-          <ul className="sinc-mon__list">
-            {checks.map((check) => <CheckCard key={check.id} check={check} />)}
-          </ul>
-        )}
+        <div className="sinc-mon__scroll">
+          {status === 'error' && (
+            <p className="sinc-mon__empty">
+              Couldn’t load uptime data right now. <a href={MONITOR_URL} target="_blank" rel="noopener noreferrer" className="sinc-mon__link">View on monitor.sinch.com ↗</a>
+            </p>
+          )}
+          {status === 'loading' && (
+            <p className="sinc-mon__empty">Loading external uptime checks…</p>
+          )}
+          {status === 'ready' && (
+            <ul className="sinc-mon__list">
+              {checks.map((check) => <CheckCard key={check.id} check={check} />)}
+            </ul>
+          )}
+        </div>
       </div>
     </article>
   );
