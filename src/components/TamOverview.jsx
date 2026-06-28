@@ -514,11 +514,22 @@ export default function TamOverview({
             <span className="tam-overview-live__dot" aria-hidden="true" />
             Live
           </span>
-          <div className="tam-overview-online" title="TAMs currently online (real-time)">
-            <span className="tam-overview-online__label">Online</span>
-            <span className="ops-panel__count ops-panel__count--good">
-              {onlineCount}/{allTams.length}
-            </span>
+          <div className="tam-overview-header-right">
+            <a
+              href="https://sinchenterprise.atlassian.net/wiki/spaces/cus/pages/455540780/Technical+Account+Managers+-+APAC+EMEA+US"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tam-overview-confluence"
+              title="Open the TAM directory (APAC / EMEA / US) in Confluence"
+            >
+              TAM Directory ↗
+            </a>
+            <div className="tam-overview-online" title="TAMs currently online (real-time)">
+              <span className="tam-overview-online__label">Online</span>
+              <span className="ops-panel__count ops-panel__count--good">
+                {onlineCount}/{allTams.length}
+              </span>
+            </div>
           </div>
         </div>
         <PortfolioSummaryBar

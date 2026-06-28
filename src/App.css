@@ -3856,6 +3856,33 @@ a.kpi-card {
   flex-shrink: 0;
 }
 
+.tam-overview-header-right {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.tam-overview-confluence {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.tam-overview-confluence:hover {
+  background: var(--bg-panel-hover);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
 .tam-overview-online__label {
   font-size: 0.62rem;
   font-weight: 600;
