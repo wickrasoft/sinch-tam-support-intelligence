@@ -5692,6 +5692,7 @@ a.kpi-card {
 .sinc-mon {
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .sinc-mon__title-row {
@@ -5741,73 +5742,208 @@ a.kpi-card {
 
 .sinc-mon__link:hover { text-decoration: underline; }
 
-.sinc-mon__frame-wrap {
-  position: relative;
-  flex: 1 1 auto;
+.sinc-mon__ranges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.6rem;
+}
+.sinc-mon__range {
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.sinc-mon__range:hover { background: var(--bg-panel-hover); color: var(--text); }
+.sinc-mon__range--active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Native rendering of the public Checkly check data (see useSinchMonitor), so the
+   panel keeps the dashboard's own theme instead of an embedded third-party page. */
+.sinc-mon__swatch--operational { background: var(--good); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18); }
+.sinc-mon__swatch--degraded { background: var(--warn, #f59e0b); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18); }
+.sinc-mon__swatch--down { background: var(--high, #ef4444); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18); }
+.sinc-mon__swatch--unknown { background: var(--text-muted); box-shadow: none; }
+
+.sinc-mon__body {
   margin-top: 0.75rem;
-  height: 540px;
-  min-height: 540px;
+  flex: 1 1 auto;
+  min-height: 240px;
+  overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid var(--border);
   border-radius: 10px;
-  overflow: hidden;
-  background: #ebebef;
+  background: var(--bg-elevated, rgba(255, 255, 255, 0.02));
 }
 
-/* monitor.sinch.com is cross-origin, so its own header (logo + title + the
-   status.sinch.com line) and footer ("Powered by Checkly") can't be hidden via
-   CSS. Offset the iframe upward and oversize it so the wrapper clips the header
-   off the top; the footer sits far below the visible window so it never shows. */
-.sinc-mon__frame {
-  position: absolute;
-  top: -150px;
-  left: 0;
-  width: 100%;
-  height: calc(100% + 150px);
-  border: 0;
-  display: block;
-  background: #ebebef;
-}
-
-/* The monitor page header grows as the iframe narrows (its status.sinch.com
-   description wraps onto more lines), so the crop offset has to step up on
-   smaller screens to keep the header fully clipped. */
-@media (max-width: 720px) {
-  .sinc-mon__frame { top: -175px; height: calc(100% + 175px); }
-}
-@media (max-width: 600px) {
-  .sinc-mon__frame { top: -195px; height: calc(100% + 195px); }
-}
-@media (max-width: 480px) {
-  .sinc-mon__frame { top: -215px; height: calc(100% + 215px); }
-}
-@media (max-width: 414px) {
-  .sinc-mon__frame { top: -240px; height: calc(100% + 240px); }
-}
-
-/* The embedded monitor page hardcodes a light Checkly theme (cross-origin, so
-   its DOM can't be restyled). On our dark themes, recolor it to match the
-   dashboard: invert flips the light surfaces dark, and the 180deg hue-rotate
-   restores the original hues (green "passing" bars stay green). */
-[data-theme='dark'] .sinc-mon__frame,
-[data-theme='sinch'] .sinc-mon__frame {
-  filter: invert(0.92) hue-rotate(180deg);
-}
-
-[data-theme='dark'] .sinc-mon__frame-wrap,
-[data-theme='sinch'] .sinc-mon__frame-wrap {
-  background: #0f172a;
-}
-
-.sinc-mon__loading {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.sinc-mon__empty {
   margin: 0;
+  padding: 1.25rem;
   color: var(--text-muted);
   font-size: 0.9rem;
 }
+
+.sinc-mon__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Card per check, mirroring the monitor.sinch.com layout (icon + name, type badge,
+   "updated X ago", big availability) but in the dashboard's native theme. */
+.sinc-mon__card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+  background: var(--bg-panel, rgba(255, 255, 255, 0.02));
+}
+
+.sinc-mon__card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sinc-mon__card-id {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.sinc-mon__icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--text-muted);
+}
+.sinc-mon__icon--operational { background: var(--good); }
+.sinc-mon__icon--degraded { background: var(--warn, #f59e0b); }
+.sinc-mon__icon--down { background: var(--high, #ef4444); }
+
+.sinc-mon__card-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.sinc-mon__card-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sinc-mon__card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.sinc-mon__type-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+}
+.sinc-mon__ago {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.sinc-mon__avail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.sinc-mon__avail-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.sinc-mon__avail-value {
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.sinc-mon__avail-pct { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
+
+/* 24h response-time history, matching the monitor.sinch.com bar chart. */
+.sinc-mon__hist { margin-top: 0.65rem; }
+.sinc-mon__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 46px;
+  width: 100%;
+}
+.sinc-mon__hbar {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 1px;
+  background: var(--good);
+  opacity: 0.9;
+}
+.sinc-mon__hbar--degraded { background: var(--warn, #f59e0b); }
+.sinc-mon__hbar--down { background: var(--high, #ef4444); }
+.sinc-mon__hbar--empty { background: var(--border); opacity: 0.6; }
+
+.sinc-mon__axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.3rem;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Fallback bar shown only if the history endpoint is unavailable. */
+.sinc-mon__bar {
+  margin-top: 0.6rem;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.sinc-mon__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--good);
+}
+.sinc-mon__bar-fill--degraded { background: var(--warn, #f59e0b); }
+.sinc-mon__bar-fill--down { background: var(--high, #ef4444); }
 
 /* On small screens drop the source pill onto its own line so it can't be
    clipped by the panel edge / scrollbar. */
