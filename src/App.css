@@ -532,6 +532,39 @@ a.kpi-card {
   background: rgba(56, 189, 248, 0.08);
 }
 
+.kpi-drill__mini-stat--button {
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.kpi-drill__mini-stat--button:hover {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.08);
+}
+.kpi-drill__mini-stat--active {
+  border-color: var(--accent);
+  background: rgba(56, 189, 248, 0.14);
+}
+
+.kpi-drill__filter-chip {
+  margin-left: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.kpi-drill__filter-chip:hover { background: rgba(56, 189, 248, 0.2); }
+
 .attention-drill-modal__stat:hover {
   border-color: rgba(249, 115, 22, 0.45);
   background: rgba(249, 115, 22, 0.08);
@@ -4564,11 +4597,11 @@ a.kpi-card {
 }
 
 .tam-status-icon__dial-hand--hour {
-  stroke-width: 4.2;
+  stroke-width: 5.5;
 }
 
 .tam-status-icon__dial-hand--minute {
-  stroke-width: 3;
+  stroke-width: 4;
 }
 
 .tam-status-icon__dial-pin {

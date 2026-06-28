@@ -40,7 +40,7 @@ function AnalogClock({ hour, minute, status, icon }) {
         x1={C}
         y1={C}
         x2={C}
-        y2="11"
+        y2="6"
         transform={`rotate(${hourAngle} ${C} ${C})`}
       />
       <line
@@ -48,7 +48,7 @@ function AnalogClock({ hour, minute, status, icon }) {
         x1={C}
         y1={C}
         x2={C}
-        y2="7"
+        y2="3"
         transform={`rotate(${minuteAngle} ${C} ${C})`}
       />
       <circle className="tam-status-icon__dial-pin" cx={C} cy={C} r="1.5" />

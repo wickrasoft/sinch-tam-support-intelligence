@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { formatDurationHours, countTicketReopenEventsInPeriod, csatIndicator, computeSummary, filterTickets, getPreviousPeriodDate, getTicketMttaMinutes, getTicketMttrMinutes } from '../utils/metrics';
 import { formatDelta, formatDurationDelta, buildComparisonSummary } from '../utils/health';
@@ -14,6 +14,17 @@ import {
 import { formatAccountCount } from '../utils/text';
 import CsatFeedbackList from './CsatFeedbackList';
 import DrilldownFooter from './DrilldownFooter';
+
+const SLA_SUBTYPE_PREDICATE = {
+  total: () => true,
+  firstResponseOnly: (t) => t.sla.first_response_breached && !t.sla.resolution_breached,
+  resolutionOnly: (t) => !t.sla.first_response_breached && t.sla.resolution_breached,
+  both: (t) => t.sla.first_response_breached && t.sla.resolution_breached,
+};
+
+function slaSubtypeLabel(key) {
+  return key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
+}
 
 function ComparisonRows({ rows }) {
   return (
@@ -131,7 +142,8 @@ function TicketMiniTable({ tickets, kpiKey, onOpenTicket, filters }) {
   );
 }
 
-function AccountBreakdownTable({ breakdown, kpiKey }) {
+function AccountBreakdownTable({ breakdown, kpiKey, onViewAccount }) {
+  const clickable = Boolean(onViewAccount);
   return (
     <div className="table-wrap">
       <table className="data-table data-table--compact">
@@ -148,7 +160,12 @@ function AccountBreakdownTable({ breakdown, kpiKey }) {
         </thead>
         <tbody>
           {breakdown.slice(0, 10).map((row) => (
-            <tr key={row.account_id}>
+            <tr
+              key={row.account_id}
+              className={clickable ? 'data-table__row--clickable' : undefined}
+              onClick={clickable ? () => onViewAccount(row.account_id) : undefined}
+              title={clickable ? 'Click to view account' : undefined}
+            >
               <td className="data-table__account">{row.account_name}</td>
               <td>{row.tam_name}</td>
               <td>{row.count}</td>
@@ -185,12 +202,17 @@ export default function KPIDrilldownModal({
   onOpenTicket,
   accounts = [],
 }) {
+  const [slaSubtype, setSlaSubtype] = useState(null);
+
   useEffect(() => {
     if (!kpiKey) return undefined;
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [kpiKey, onClose]);
+
+  // Reset the breach-subtype drilldown when the modal target changes.
+  useEffect(() => { setSlaSubtype(null); }, [kpiKey, drilldownContext]);
 
   const effectiveFilters = useMemo(() => {
     const next = { ...filters };
@@ -253,6 +275,12 @@ export default function KPIDrilldownModal({
   const config = KPI_CONFIG[kpiKey];
   const context = { allTickets, filters: effectiveFilters };
   const breakdown = getAccountBreakdown(kpiTickets, kpiKey, effectiveFilters);
+  // Breach breakdown is scoped to the tickets in view (account/TAM/region), and the
+  // selected subtype card filters the tickets list below.
+  const slaBreakdown = kpiKey === KPI_KEYS.SLA ? getSlaBreakdown(kpiTickets) : null;
+  const displayedTickets = kpiKey === KPI_KEYS.SLA && slaSubtype
+    ? kpiTickets.filter(SLA_SUBTYPE_PREDICATE[slaSubtype] ?? (() => true))
+    : kpiTickets;
   const compRows = formatKpiComparison(
     kpiKey,
     scopedSummary,
@@ -320,18 +348,26 @@ export default function KPIDrilldownModal({
             </section>
           )}
 
-          {kpiKey === KPI_KEYS.SLA && (
+          {kpiKey === KPI_KEYS.SLA && slaBreakdown && (
             <section className="kpi-drill__section">
               <h3>Breach type breakdown</h3>
               <div className="kpi-drill__stat-grid">
-                {Object.entries(getSlaBreakdown(tickets)).map(([key, val]) => (
-                  <div key={key} className="kpi-drill__mini-stat">
-                    <span className="kpi-drill__mini-value">{val}</span>
-                    <span className="kpi-drill__mini-label">
-                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())}
-                    </span>
-                  </div>
-                ))}
+                {Object.entries(slaBreakdown).map(([key, val]) => {
+                  const active = (slaSubtype ?? 'total') === key;
+                  return (
+                    <button
+                      type="button"
+                      key={key}
+                      className={`kpi-drill__mini-stat kpi-drill__mini-stat--button${active ? ' kpi-drill__mini-stat--active' : ''}`}
+                      aria-pressed={active}
+                      onClick={() => setSlaSubtype(key === 'total' || slaSubtype === key ? null : key)}
+                      title={key === 'total' ? 'Show all breached tickets' : `Filter to ${slaSubtypeLabel(key)} breaches`}
+                    >
+                      <span className="kpi-drill__mini-value">{val}</span>
+                      <span className="kpi-drill__mini-label">{slaSubtypeLabel(key)}</span>
+                    </button>
+                  );
+                })}
               </div>
             </section>
           )}
@@ -376,18 +412,32 @@ export default function KPIDrilldownModal({
 
           <section className="kpi-drill__section">
             <h3>By Account ({formatAccountCount(breakdown.length)})</h3>
-            <AccountBreakdownTable breakdown={breakdown} kpiKey={kpiKey} />
+            <AccountBreakdownTable
+              breakdown={breakdown}
+              kpiKey={kpiKey}
+              onViewAccount={onViewAccount}
+            />
           </section>
 
           <section className="kpi-drill__section">
             <h3>
-              {kpiKey === KPI_KEYS.CSAT ? 'Survey responses' : 'Tickets'} ({kpiTickets.length})
+              {kpiKey === KPI_KEYS.CSAT ? 'Survey responses' : 'Tickets'} ({displayedTickets.length})
+              {slaSubtype && (
+                <button
+                  type="button"
+                  className="kpi-drill__filter-chip"
+                  onClick={() => setSlaSubtype(null)}
+                  title="Clear breach-type filter"
+                >
+                  {slaSubtypeLabel(slaSubtype)} ×
+                </button>
+              )}
             </h3>
-            {kpiTickets.length === 0 ? (
+            {displayedTickets.length === 0 ? (
               <p className="muted">No tickets match this metric in the selected period.</p>
             ) : (
               <TicketMiniTable
-                tickets={kpiTickets}
+                tickets={displayedTickets}
                 kpiKey={kpiKey}
                 onOpenTicket={onOpenTicket}
                 filters={effectiveFilters}
