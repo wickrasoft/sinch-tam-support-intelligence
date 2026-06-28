@@ -47,6 +47,29 @@ export function getTeamLinkDistribution(tickets) {
     .sort((a, b) => b.value - a.value);
 }
 
+// JIRA statuses that mean the cross-team escalation is finished. Anything else
+// (Open, In Progress, In Review, Blocked) is treated as still ongoing.
+export const ESCALATION_DONE_STATUSES = new Set(['Done', 'Resolved', 'Closed']);
+
+export function isOngoingTeamLink(link) {
+  if (!link?.team) return false;
+  return !ESCALATION_DONE_STATUSES.has(link.status);
+}
+
+/** True when a ticket has an ongoing (unfinished) escalation to the given team. */
+export function hasOngoingEscalationToTeam(ticket, team) {
+  return (ticket.team_links ?? []).some((l) => l.team === team && isOngoingTeamLink(l));
+}
+
+/** Count of tickets with an ongoing escalation to the given team. */
+export function countOngoingEscalationsForTeam(tickets, team) {
+  let count = 0;
+  for (const ticket of tickets ?? []) {
+    if (hasOngoingEscalationToTeam(ticket, team)) count += 1;
+  }
+  return count;
+}
+
 export function getTeamLinkTotals(tickets) {
   let ticketsWithLinks = 0;
   let totalLinks = 0;

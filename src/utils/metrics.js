@@ -18,6 +18,7 @@ import {
   differenceInMinutes,
 } from 'date-fns';
 import { normalizeTamRegion } from './tamAvailability';
+import { countOngoingEscalationsForTeam } from './teamLinks';
 
 export const PERIOD_OPTIONS = [
   { value: 'day', label: 'Daily' },
@@ -407,6 +408,10 @@ export function computeSummary(tickets, allTickets, filters) {
 
   const needsAttention = tickets.filter((t) => t.needs_attention).length;
 
+  // Ongoing cross-team escalations still in flight (status not Done/Resolved).
+  const ongoingServiceOpsEsc = countOngoingEscalationsForTeam(tickets, 'Service Operations');
+  const ongoingSupplierEsc = countOngoingEscalationsForTeam(tickets, 'Supplier Escalation');
+
   const activityBreakdown = getPortfolioActivityBreakdown({
     totalTickets: tickets.length,
     p1p2Count: p1Count + p2Count,
@@ -449,6 +454,8 @@ export function computeSummary(tickets, allTickets, filters) {
     activityTotal,
     dispositionCounts,
     needsAttention,
+    ongoingServiceOpsEsc,
+    ongoingSupplierEsc,
   };
 }
 

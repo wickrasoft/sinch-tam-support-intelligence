@@ -10,6 +10,7 @@ import {
   getTicketMttrMinutes,
   countTicketReopenEventsInPeriod,
 } from './metrics';
+import { hasOngoingEscalationToTeam } from './teamLinks';
 
 export const KPI_KEYS = {
   P1: 'p1',
@@ -34,6 +35,8 @@ export const KPI_KEYS = {
   FCR: 'fcr',
   P1_INCIDENTS: 'p1_incidents',
   HANDLED: 'handled',
+  ESC_SERVICEOPS: 'esc_serviceops',
+  ESC_SUPPLIER: 'esc_supplier',
 };
 
 export const KPI_CONFIG = {
@@ -125,6 +128,14 @@ export const KPI_CONFIG = {
     title: 'Tickets Handled',
     description: 'Tickets worked in the selected period — opened by clients in the period, plus older tickets resolved, closed, or reopened during the period.',
   },
+  [KPI_KEYS.ESC_SERVICEOPS]: {
+    title: 'Ongoing Service Operations Escalations',
+    description: 'Tickets with an unresolved JIRA escalation to the Service Operations (TOR) team in the selected period.',
+  },
+  [KPI_KEYS.ESC_SUPPLIER]: {
+    title: 'Ongoing Supplier Escalations',
+    description: 'Tickets with an unresolved JIRA escalation to the Supplier Escalation (SINCHSUP) team in the selected period.',
+  },
 };
 
 export function getTicketsForKpi(tickets, kpiKey, context = {}) {
@@ -196,6 +207,10 @@ export function getTicketsForKpi(tickets, kpiKey, context = {}) {
       return tickets.filter((t) => (t.solved_at || t.closed_at) && (t.reopen_count ?? 0) === 0);
     case KPI_KEYS.P1_INCIDENTS:
       return tickets.filter((t) => t.incident?.severity === 'SEV1');
+    case KPI_KEYS.ESC_SERVICEOPS:
+      return tickets.filter((t) => hasOngoingEscalationToTeam(t, 'Service Operations'));
+    case KPI_KEYS.ESC_SUPPLIER:
+      return tickets.filter((t) => hasOngoingEscalationToTeam(t, 'Supplier Escalation'));
     case KPI_KEYS.HANDLED:
       if (allTickets && filters) {
         return getTicketsHandledListInPeriod(allTickets, filters);
@@ -399,6 +414,12 @@ export function formatKpiComparison(kpiKey, summary, comparison, previousSummary
     case KPI_KEYS.HANDLED:
       rows.push({ label: 'Tickets handled', current: summary.handledCount ?? 0, prior: previousSummary?.handledCount });
       rows.push({ label: 'Opened by clients in period', current: summary.totalTickets, prior: previousSummary?.totalTickets, delta: comparison?.totalTickets });
+      break;
+    case KPI_KEYS.ESC_SERVICEOPS:
+      rows.push({ label: 'Ongoing Service Ops escalations', current: summary.ongoingServiceOpsEsc ?? 0, prior: previousSummary?.ongoingServiceOpsEsc });
+      break;
+    case KPI_KEYS.ESC_SUPPLIER:
+      rows.push({ label: 'Ongoing Supplier escalations', current: summary.ongoingSupplierEsc ?? 0, prior: previousSummary?.ongoingSupplierEsc });
       break;
     default:
       break;

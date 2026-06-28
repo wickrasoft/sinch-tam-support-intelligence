@@ -98,6 +98,20 @@ export default function KPICards({
       delta: comparison?.escalated,
     },
     {
+      key: KPI_KEYS.ESC_SERVICEOPS,
+      title: 'Ongoing ServiceOps Esc',
+      value: summary.ongoingServiceOpsEsc ?? 0,
+      sub: 'Unresolved Service Ops (TOR) escalations',
+      accent: (summary.ongoingServiceOpsEsc ?? 0) > 0 ? 'warn' : 'good',
+    },
+    {
+      key: KPI_KEYS.ESC_SUPPLIER,
+      title: 'Ongoing Supplier Esc',
+      value: summary.ongoingSupplierEsc ?? 0,
+      sub: 'Unresolved Supplier (SINCHSUP) escalations',
+      accent: (summary.ongoingSupplierEsc ?? 0) > 0 ? 'warn' : 'good',
+    },
+    {
       key: KPI_KEYS.SLA,
       title: 'SLA Breaches',
       value: summary.slaBreaches,
