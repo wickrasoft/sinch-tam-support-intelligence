@@ -899,6 +899,9 @@ function DashboardApp({ dataset }) {
           account={activeAccountHealthData.current}
           previousAccount={activeAccountHealthData.previous}
           tickets={filteredTickets}
+          tams={tams}
+          accounts={accounts}
+          referenceDate={activeFilters.referenceDate}
           periodLabel={periodLabel}
           onClose={() => setActiveAccountHealthDrilldown(null)}
           onFilterPortfolio={handleAccountFilterPortfolio}

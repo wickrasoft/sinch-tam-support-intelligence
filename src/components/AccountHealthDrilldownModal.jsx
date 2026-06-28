@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { format, parseISO } from 'date-fns';
 import { formatDurationHours } from '../utils/metrics';
 import {
   computeDelta,
@@ -6,7 +7,73 @@ import {
   getAccountRiskFlags,
   getHealthScoreFactors,
 } from '../utils/health';
+import { resolveTamCoverage } from '../utils/tamAvailability';
+import { TAM_STATUS_CONFIG } from '../utils/tamStatus';
+import { formatTamDisplayName, countryFlag } from '../utils/text';
+import TamStatusIcon from './TamStatusIcon';
 import DrilldownFooter from './DrilldownFooter';
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  try {
+    return format(parseISO(iso), 'MMM d, yyyy');
+  } catch {
+    return '';
+  }
+}
+
+// A TAM presence chip: status dial + name/region/flag + status line. When the
+// TAM is out of office it surfaces the OOO type, return date, and assigned backup.
+function TamChip({ tam, allTams, referenceDate, caption }) {
+  if (!tam) return null;
+  const coverage = resolveTamCoverage(tam, allTams, referenceDate) ?? {};
+  const ooo = coverage.out_of_office;
+  const iconStatus = ooo
+    ? coverage.ooo_type === 'Sick'
+      ? 'sick'
+      : coverage.ooo_type === 'Vacation'
+        ? 'vacation'
+        : 'away'
+    : coverage.status;
+  const presenceLabel = TAM_STATUS_CONFIG[coverage.status]?.label ?? coverage.status ?? 'Online';
+  const statusText = ooo
+    ? `Out of office${coverage.ooo_type ? ` · ${coverage.ooo_type}` : ''}${
+        coverage.ooo_until ? ` · Returns ${fmtDate(coverage.ooo_until)}` : ''
+      }`
+    : presenceLabel;
+  const toneClass = ooo ? 'ooo' : coverage.status ?? 'online';
+
+  const details = [];
+  if (ooo && coverage.ooo_until) details.push(`Returns ${fmtDate(coverage.ooo_until)}`);
+  if (ooo && coverage.backup_tam) details.push(`Backup ${coverage.backup_tam.name}`);
+
+  return (
+    <div className="account-health-drill__tam">
+      <TamStatusIcon
+        tam={tam}
+        status={iconStatus}
+        showTooltip
+        details={details}
+        className="account-health-drill__tam-dial"
+      />
+      <div className="account-health-drill__tam-info">
+        {caption && <span className="account-health-drill__tam-caption">{caption}</span>}
+        <span className="account-health-drill__tam-name">
+          {formatTamDisplayName(tam.name, tam.region)}
+          {tam.country && (
+            <span className="account-health-drill__tam-flag" title={tam.country}>
+              {' '}
+              {countryFlag(tam.country)}
+            </span>
+          )}
+        </span>
+        <span className={`account-health-drill__tam-status account-health-drill__tam-status--${toneClass}`}>
+          {statusText}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function MetricTile({ label, value, sub, tone }) {
   return (
@@ -22,6 +89,9 @@ export default function AccountHealthDrilldownModal({
   account,
   previousAccount,
   tickets = [],
+  tams = [],
+  accounts = [],
+  referenceDate,
   periodLabel,
   onClose,
   onFilterPortfolio,
@@ -36,6 +106,17 @@ export default function AccountHealthDrilldownModal({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  const primaryTam = useMemo(() => {
+    if (!account) return null;
+    const acc = accounts.find((a) => a.id === account.account_id);
+    return tams.find((t) => t.id === acc?.tam_id) ?? null;
+  }, [accounts, tams, account]);
+
+  const coverage = useMemo(
+    () => (primaryTam ? resolveTamCoverage(primaryTam, tams, referenceDate) : null),
+    [primaryTam, tams, referenceDate],
+  );
 
   if (!account) return null;
 
@@ -102,6 +183,35 @@ export default function AccountHealthDrilldownModal({
               Score starts at 100 and subtracts penalties for SLA breaches, low CSAT,
               reopenings, and P1/P2 volume.
             </p>
+          </section>
+
+          <section className="kpi-drill__section account-health-drill__tam-section">
+            <h3>TAM coverage</h3>
+            {primaryTam ? (
+              <div className="account-health-drill__tam-grid">
+                <TamChip
+                  tam={primaryTam}
+                  allTams={tams}
+                  referenceDate={referenceDate}
+                  caption="Primary TAM"
+                />
+                {coverage?.out_of_office &&
+                  (coverage.backup_tam ? (
+                    <TamChip
+                      tam={coverage.backup_tam}
+                      allTams={tams}
+                      referenceDate={referenceDate}
+                      caption="Covering TAM (backup)"
+                    />
+                  ) : (
+                    <div className="account-health-drill__tam account-health-drill__tam--empty">
+                      Primary TAM is out of office and no backup is assigned for this absence.
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="muted">TAM: {account.tam_name}</p>
+            )}
           </section>
 
           {riskFlags.length > 0 && (

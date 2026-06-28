@@ -170,6 +170,44 @@ export function resolveTamAvailability(tam, referenceDate, liveNow = new Date(),
   };
 }
 
+/**
+ * Coverage for an account's primary TAM: their resolved status plus, when they
+ * are out of office (vacation, sick, or an active planned OOO block from Teams
+ * Shifts), the assigned backup TAM who covers in their absence.
+ */
+export function resolveTamCoverage(tam, allTams = [], referenceDate, liveNow = new Date()) {
+  if (!tam) return null;
+  const at = resolveAvailabilityAt(referenceDate, liveNow);
+  const base = resolveTamAvailability(tam, referenceDate, liveNow, allTams);
+
+  let outOfOffice = base.status === 'vacation' || base.status === 'sick';
+  let oooType = base.status === 'vacation' ? 'Vacation' : base.status === 'sick' ? 'Sick' : null;
+  let oooUntil = base.vacation_until ?? base.sick_until ?? null;
+  let backupId = base.backup_tam_id;
+
+  // Planned OOO blocks only matter when not already on vacation/sick.
+  if (!outOfOffice) {
+    const block = (tam.availability?.ooo ?? []).find((b) => isDateInRange(at, b.start, b.end));
+    if (block) {
+      outOfOffice = true;
+      oooType = block.type ?? 'Out of office';
+      oooUntil = block.end ?? null;
+      backupId = block.backup_tam_id ?? backupId;
+    }
+  }
+
+  const backupTam = backupId ? allTams.find((t) => t.id === backupId) ?? null : null;
+
+  return {
+    ...base,
+    out_of_office: outOfOffice,
+    ooo_type: oooType,
+    ooo_until: oooUntil,
+    backup_tam_id: backupId ?? null,
+    backup_tam: backupTam,
+  };
+}
+
 export function enrichTamsWithAvailability(tams, referenceDate, liveNow = new Date()) {
   return tams.map((tam) => ({
     ...tam,
