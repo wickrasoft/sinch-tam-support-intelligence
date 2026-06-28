@@ -5784,6 +5784,20 @@ a.kpi-card {
   .sinc-mon__frame { top: -240px; height: calc(100% + 240px); }
 }
 
+/* The embedded monitor page hardcodes a light Checkly theme (cross-origin, so
+   its DOM can't be restyled). On our dark themes, recolor it to match the
+   dashboard: invert flips the light surfaces dark, and the 180deg hue-rotate
+   restores the original hues (green "passing" bars stay green). */
+[data-theme='dark'] .sinc-mon__frame,
+[data-theme='sinch'] .sinc-mon__frame {
+  filter: invert(0.92) hue-rotate(180deg);
+}
+
+[data-theme='dark'] .sinc-mon__frame-wrap,
+[data-theme='sinch'] .sinc-mon__frame-wrap {
+  background: #0f172a;
+}
+
 .sinc-mon__loading {
   position: absolute;
   inset: 0;
