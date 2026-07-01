@@ -11,12 +11,14 @@ import os
 import re
 import shutil
 from docx import Document
+from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.oxml.table import CT_Tbl
 from docx.oxml.text.paragraph import CT_P
 from docx.table import Table
 from docx.text.paragraph import Paragraph
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from docx.shared import RGBColor, Pt, Inches
 
 TEMPLATE = "/Users/kalwic/Downloads/Standard Word template with examples.docx"
@@ -217,14 +219,58 @@ def add_screenshots(tpl, key, caption):
     return len(paths)
 
 
+# Table typography and colours. Larger, more readable than the template default.
+TABLE_HEADER_PT = 12
+TABLE_BODY_PT = 11
+HEADER_FILL = "1B3A5B"          # Sinch-style deep blue header band
+HEADER_TEXT = RGBColor(0xFF, 0xFF, 0xFF)
+BORDER_COLOR = "B7C0CC"
+
+
+def _shade_cell(cell, hex_fill):
+    tcPr = cell._tc.get_or_add_tcPr()
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:color"), "auto")
+    shd.set(qn("w:fill"), hex_fill)
+    tcPr.append(shd)
+
+
+def _set_cell_margins(cell, top=60, bottom=60, left=110, right=110):
+    tcPr = cell._tc.get_or_add_tcPr()
+    mar = OxmlElement("w:tcMar")
+    for side, val in (("top", top), ("bottom", bottom), ("left", left), ("right", right)):
+        node = OxmlElement(f"w:{side}")
+        node.set(qn("w:w"), str(val))
+        node.set(qn("w:type"), "dxa")
+        mar.append(node)
+    tcPr.append(mar)
+
+
+def _set_table_borders(table):
+    tblPr = table._tbl.tblPr
+    borders = OxmlElement("w:tblBorders")
+    for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
+        el = OxmlElement(f"w:{edge}")
+        el.set(qn("w:val"), "single")
+        el.set(qn("w:sz"), "4")
+        el.set(qn("w:space"), "0")
+        el.set(qn("w:color"), BORDER_COLOR)
+        borders.append(el)
+    tblPr.append(borders)
+
+
 def add_table(tpl, src_table):
     nrows = len(src_table.rows)
     ncols = len(src_table.columns)
     t = tpl.add_table(rows=nrows, cols=ncols)
     try:
-        t.style = "Sinch"
-    except Exception:
         t.style = "Table Grid"
+    except Exception:
+        pass
+    t.alignment = WD_TABLE_ALIGNMENT.CENTER
+    _set_table_borders(t)
+
     for ri, row in enumerate(src_table.rows):
         for ci in range(ncols):
             try:
@@ -233,10 +279,19 @@ def add_table(tpl, src_table):
                 continue
             cell = t.cell(ri, ci)
             cell.text = humanize(src_cell.text)
-            if ri == 0:
-                for par in cell.paragraphs:
-                    for run in par.runs:
+            cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+            _set_cell_margins(cell)
+            is_header = ri == 0
+            if is_header:
+                _shade_cell(cell, HEADER_FILL)
+            for par in cell.paragraphs:
+                par.paragraph_format.space_after = Pt(2)
+                par.paragraph_format.space_before = Pt(2)
+                for run in par.runs:
+                    run.font.size = Pt(TABLE_HEADER_PT if is_header else TABLE_BODY_PT)
+                    if is_header:
                         run.bold = True
+                        run.font.color.rgb = HEADER_TEXT
 
 
 def demote_heading(name, demote):
